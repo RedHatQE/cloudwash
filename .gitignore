@@ -1,0 +1,9 @@
+settings.yaml
+.vscode/
+.idea
+.cache/
+.eggs
+*.egg-info
+**/cleanup*.log
+*.pyc
+dist/

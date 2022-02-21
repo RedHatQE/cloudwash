@@ -1,0 +1,26 @@
+---
+# The VM to be deleted with prepend string
+DELETE_VM: 'test'
+# Number of minutes the deletable VM should be allowed to live
+SLA_MINUTES: 120
+# Compute Resources and there credentials to connect to them for cleanup
+PROVIDERS:
+  GCE:
+    PROJECT_ID:
+    SERVICE_ACCOUNT:
+    EXCEPT_VM_STOP_LIST: []
+
+  AZURE:
+    USERNAME:
+    PASSWORD:
+    TENANT_ID:
+    SUBSCRIPTION_ID:
+    RESOURCE_GROUP:
+    REGION:
+    EXCEPT_VM_STOP_LIST: []
+
+  EC2:
+    USERNAME:
+    PASSWORD:
+    REGION:
+    EXCEPT_VM_STOP_LIST: []
