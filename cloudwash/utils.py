@@ -6,7 +6,7 @@ from cloudwash.logger import logger
 import pytz
 
 _vms_dict = {'VMS': {'delete': [], 'stop': []}}
-dry_data = {'NICS': {'delete': []}, 'DISCS': {'delete': []}, 'PIPS': {'delete': []}}
+dry_data = {'NICS': {'delete': []}, 'DISCS': {'delete': []}, 'PIPS': {'delete': []}, 'RESOURCES': {'delete': []}}
 dry_data.update(_vms_dict)
 
 
@@ -22,6 +22,7 @@ def echo_dry(dry_data=None) -> None:
     deletable_discs = dry_data["DISCS"]['delete']
     deletable_nics = dry_data["NICS"]['delete']
     deletable_pips = dry_data["PIPS"]['delete'] if 'PIPS' in dry_data else None
+    deletable_resources = dry_data["RESOURCES"]['delete']
 
     if deletable_vms or stopable_vms:
         logger.info(f'VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}')
@@ -31,7 +32,9 @@ def echo_dry(dry_data=None) -> None:
         logger.info(f'NICs:\n\tDeletable: {deletable_nics}')
     if deletable_pips:
         logger.info(f'PIPs:\n\tDeletable: {deletable_pips}')
-    if not any([deletable_vms, stopable_vms, deletable_discs, deletable_nics, deletable_pips]):
+    if deletable_resources:
+        logger.info(f'RESOURCEs:\n\tDeletable: {deletable_resources}')
+    if not any([deletable_vms, stopable_vms, deletable_discs, deletable_nics, deletable_pips, deletable_resources]):
         logger.info('No resources are eligible for cleanup!')
     logger.info('\n====================================\n')
 

@@ -54,6 +54,10 @@ def cleanup(**kwargs):
             [dry_data['PIPS']['delete'].append(dpip) for dpip in rpips]
             return rpips
 
+        def dry_resources(hours_old=None):
+            dry_data['RESOURCES']['delete'] = azure_client.list_resources_from_hours_old(hours_old=hours_old or (settings.sla_minutes / 60))
+            return dry_data['RESOURCES']['delete']
+
         # Remove / Stop VMs
         def remove_vms(avms):
             # Remove VMs
@@ -83,5 +87,10 @@ def cleanup(**kwargs):
             if not is_dry_run:
                 azure_client.remove_pips_by_search()
                 logger.info(f'Removed following and all unused pips from Azure Cloud. \n{rpips}')
+        if kwargs['_all_rg']:
+            rres = dry_resources()
+            if not is_dry_run:
+                azure_client.remove_resource_group_of_old_resources(hours_old=(settings.sla_minutes / 60))
+                logger.info(f'Removed following and all unused resources from Azure Cloud. \n{rres}')
         if is_dry_run:
             echo_dry(dry_data)

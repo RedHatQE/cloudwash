@@ -52,13 +52,14 @@ def gce(ctx, vms, discs, nics, _all):
 @cleanup_providers.command(help='Cleanup Azure provider')
 @common_options
 @click.option('--pips', is_flag=True, help='Remove only PiPs from the provider')
+@click.option('--all_rg', '_all_rg', is_flag=True, help='Remove resource group only if all resources are older than SLA')
 @click.pass_context
-def azure(ctx, vms, discs, nics, pips, _all):
+def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
     # Validate Azure Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params['dry']
     azureCleanup(
-        vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run)
+        vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, _all_rg=_all_rg, dry_run=is_dry_run)
 
 
 @cleanup_providers.command(help='Cleanup Amazon provider')
