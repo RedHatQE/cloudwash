@@ -1,4 +1,4 @@
-"""Azure CR Cleanup Utilities"""
+"""ec2 CR Cleanup Utilities"""
 from cloudwash.config import settings
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
@@ -51,21 +51,21 @@ def cleanup(**kwargs):
             if not is_dry_run:
                 remove_vms(avms=avms)
                 logger.info(
-                    f"Stopped {avms['stop']} and removed {avms['delete']} VMs from Azure Cloud.")
+                    f"Stopped {avms['stop']} and removed {avms['delete']} VMs from ec2 Cloud.")
         if kwargs['nics'] or kwargs['_all']:
             rnics = dry_nics()
             if not is_dry_run:
                 ec2_client.remove_all_unused_nics()
-                logger.info(f'Removed following and all unused nics from Azure Cloud. \n{rnics}')
+                logger.info(f'Removed following and all unused nics from ec2 Cloud. \n{rnics}')
         if kwargs['discs'] or kwargs['_all']:
             rdiscs = dry_discs()
             if not is_dry_run:
                 ec2_client.remove_all_unused_volumes()
-                logger.info(f'Removed following and all unused discs from Azure Cloud. \n{rdiscs}')
+                logger.info(f'Removed following and all unused discs from ec2 Cloud. \n{rdiscs}')
         if kwargs['pips'] or kwargs['_all']:
             rpips = dry_pips()
             if not is_dry_run:
                 ec2_client.remove_all_unused_ips()
-                logger.info(f'Removed following and all unused pips from Azure Cloud. \n{rpips}')
+                logger.info(f'Removed following and all unused pips from ec2 Cloud. \n{rpips}')
         if is_dry_run:
             echo_dry(dry_data)
