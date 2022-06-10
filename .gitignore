@@ -1,4 +1,8 @@
 settings.yaml
+metadata.json
+openshift-install
+.openshift-install
+.openshift_install.log
 .vscode/
 .idea
 .cache/

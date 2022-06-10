@@ -5,7 +5,7 @@ from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
 from cloudwash.utils import total_running_time
-
+from cloudwash.utils import delete_ocp
 
 def cleanup(**kwargs):
 
@@ -18,6 +18,7 @@ def cleanup(**kwargs):
     for region in regions:
         dry_data['VMS']['stop'] = []
         dry_data['VMS']['skip'] = []
+        dry_data["OCPS"]["delete"] = []
         for items in data:
             dry_data[items]['delete'] = []
         with compute_client("ec2", ec2_region=region) as ec2_client:
@@ -51,6 +52,13 @@ def cleanup(**kwargs):
                 [dry_data["PIPS"]["delete"].append(dpip["AllocationId"]) for dpip in rpips]
                 return dry_data["PIPS"]["delete"]
 
+            def dry_ocps():
+                all_ocps = ec2_client.list_ocps()
+                for ocp in all_ocps:
+                    # TODO: Filter according to the SLA_MINUTES
+                    dry_data["OCPS"]["delete"].append(ocp)
+                return dry_data["OCPS"]["delete"]
+
             # Remove / Stop VMs
             def remove_vms(avms):
                 # Remove VMs
@@ -82,5 +90,12 @@ def cleanup(**kwargs):
                 if not is_dry_run:
                     ec2_client.remove_all_unused_ips()
                     logger.info(f"Removed PIPs: \n{rpips}")
+            if kwargs["ocps"]:
+                rocps = dry_ocps()
+                if not is_dry_run:
+                    for ocp in rocps:
+                        delete_ocp(ocp)
+                    ocp_names = [ocp["name"] for ocp in rocps]
+                    logger.info(f"[WIP] Removed OCP clusters: \n{ocp_names}")
             if is_dry_run:
                 echo_dry(dry_data)
