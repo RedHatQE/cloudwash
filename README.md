@@ -99,12 +99,13 @@ Usage: swach azure [OPTIONS]
   Cleanup Azure provider
 
 Options:
-  --all    Remove all unused Resources from the provider
-  --nics   Remove only unused NICs from the provider
-  --discs  Remove only unused DISCs from the provider
-  --vms    Remove only unused VMs from the provider
-  --pips   Remove only PiPs from the provider
-  --help   Show this message and exit.
+  --all             Remove all unused Resources from the provider
+  --all_rg          Remove resource group only if all resources are older than SLA
+  --nics            Remove only unused NICs from the provider
+  --discs           Remove only unused DISCs from the provider
+  --vms             Remove only unused VMs from the provider
+  --pips            Remove only PiPs from the provider
+  --help            Show this message and exit.
 
 ```
 
@@ -122,11 +123,11 @@ VMs:
 	Deletable: ['test-bvhoduliam']
 	Stoppable: ['foremanqe-nightly2']
 DISCs:
-	Deletable: ['test-axodawttrw-nic0']
+	Deletable: ['test-bvhoduliam-osdisk']
 NICs:
 	Deletable: ['test-axodawttrw-nic0']
 PIPs:
-	Deletable: ['test-axodawttrw-nic0']
+	Deletable: ['test-axodawttrw-pip0']
 ====================================
 ```
 
