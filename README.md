@@ -1,4 +1,4 @@
-# cloudwash
+# Cloudwash
 
 ## Introduction
 
@@ -11,22 +11,23 @@ cloudwash supports following cloud providers:
 * Amazon EC2
 * Google Cloud
 * Microsoft Azure
-* RedHat Enterprize Virtualization Manager - RHEV (Provisioned)
-* RedHat Openstack (Provisioned)
-* VMWare vCenter (Provisioned)
+* RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
+* RedHat Openstack (_Support yet To be added_)
+* VMWare vCenter (_Support yet To be added_)
+* OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
 The list of resources it helps to clean are:
 
-* VMs
-* Network Interfaces
-* Public IPs
-* Disks
-
+> VMs, Network Interfaces, Public IPs, Disks, Azure Resource group and more.
 
 ## Installation
 
-`cloudwash` can be installed via `pip` once you clone this git repository locally.
-It is always a good idea to use virtualenv to install pip packages.
+User can run `cloudwash` multiple ways:
+- [PiP Package Installation](#pip-package-installation)
+- [Docker Image Installation](#docker-image-installation)
+- [OC BuildConfig Installation](#oc-buildconfig-installation)
+
+### PiP Package Installation
 
 For Linux Users, Depending on the distribution you are using, you may need to install following packages
 (or similar for your distribution of linux):
@@ -43,26 +44,47 @@ Read more about it http://pycurl.io/docs/latest/install.html
 Installation:
 
 ```
-# git clone https://github.com/RedHatQE/cloudwash.git
-# cd cloudwash
-# pip install .
-# cp settings.yaml.template settings.yaml
+$ mkdir ~/cloudwash && cd ~/cloudwash
+$ pip install cloudwash
 ```
+
+### Docker Image Installation
+
+#### From Container image registry
+The [container image](https://quay.io/repository/redhatqe/cloudwash) for cloudwash is available in quay. This image provides the cloudwash installed from released python package.
+
+#### Build from local DockerFile
+This github repo contains two set of docker files, use any container building service to build from the dockerfile:
+
+1. **Stable Dockerfile** - Build container from `Dockerfile.stable` that should build a container from released python package of cloudwash. This would be very similar to quiy.io image above.
+2. **Development Dockerfile** - Build container from `Dockerfile.dev` that should build a container from the cloudwash github master branch giving the access to pre-released features.
+
+
+### OC BuildConfig Installation
+This github repo provides the ready to use BuildConfig on OCP / Kubernetes. The build config should create buildconfigs to build stable and dev container images. Use those image to build cloudwash pod.
 
 
 ## Configuration
 
-
-To use this tool one needs to copy the `settings.yaml.template` to `settings.yaml` as instructed in Installation section above.
-Then, edit the `settings.yaml` and feed all the configuration needed to connect with the cloud providers as clients.
-
-`cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml` and it allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`.
+The `cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml`, it also allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`. 
 
 e.g: The Azure password field can be set via environment variable by exporting the environment variable
 
 ```
 # export CLEANUP_PROVIDERS__AZURE__PASSWORD = myPa$$worb"
 ```
+
+#### Configuration with PyPi package:
+
+Copy `settings.yaml.template` to local `~/cloudwash` directory as `settings.yaml`, update it with the cloud provider credentials and other configuration details for successful resource reporting and cleanup.
+
+
+#### Configuration with cloudwash container images:
+
+_Either_ - The docker images have `settings.yaml` added from Dockerfile. Build the container from the image, access the container and update the `settings.yaml` with real values and commit the changes to the image. Use the commited image for cleanup activity. 
+
+_Or_ - Export/Set the environment variables for all or only sensitive credentials as shown above. The dynaconf in cloudwash container should read these credentials from environment variable.
+
 
 ## Usage Examples
 

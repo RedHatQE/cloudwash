@@ -28,7 +28,7 @@ items:
     source:
       git:
         uri: https://github.com/RedHatQE/cloudwash.git
-        ref: cloudwash_container
+        ref: master
       type: Git
     strategy:
       dockerStrategy:
@@ -52,7 +52,7 @@ items:
     source:
       git:
         uri: https://github.com/RedHatQE/cloudwash.git
-        ref: cloudwash_container
+        ref: master
       type: Git
     strategy:
       dockerStrategy:
