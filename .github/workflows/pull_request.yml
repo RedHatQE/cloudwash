@@ -1,0 +1,41 @@
+# CI stages to execute against Pull Requests
+name: Pull Requests
+
+on:
+  pull_request:
+    types: ["opened", "synchronize", "reopened"]
+
+env:
+    PYCURL_SSL_LIBRARY: openssl
+
+jobs:
+  codechecks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cloudwash
+        uses: actions/checkout@v3
+
+      - name: Set Up Python3
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt-get install -y libgnutls28-dev libcurl4-openssl-dev libssl-dev
+          # Uninstall pycurl - its likely not installed, but in case the ubuntu-latest packages change
+          # then compile and install it with PYCURL_SSL_LIBRARY set to openssl
+          pip install -U pip wheel
+          pip uninstall -y pycurl
+          pip install --compile --no-cache-dir pycurl
+          pip install .[dev]
+          cp settings.yaml.template settings.yaml
+
+      - name: Pre Commit Checks
+        uses: pre-commit/action@v3.0.0
+
+      - name: Analysis (git diff)
+        if: failure()
+        run: git diff

@@ -66,7 +66,7 @@ This github repo provides the ready to use BuildConfig on OCP / Kubernetes. The 
 
 ## Configuration
 
-The `cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml`, it also allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`. 
+The `cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml`, it also allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`.
 
 e.g: The Azure password field can be set via environment variable by exporting the environment variable
 
@@ -81,7 +81,7 @@ Copy `settings.yaml.template` to local `~/cloudwash` directory as `settings.yaml
 
 #### Configuration with cloudwash container images:
 
-_Either_ - The docker images have `settings.yaml` added from Dockerfile. Build the container from the image, access the container and update the `settings.yaml` with real values and commit the changes to the image. Use the commited image for cleanup activity. 
+_Either_ - The docker images have `settings.yaml` added from Dockerfile. Build the container from the image, access the container and update the `settings.yaml` with real values and commit the changes to the image. Use the commited image for cleanup activity.
 
 _Or_ - Export/Set the environment variables for all or only sensitive credentials as shown above. The dynaconf in cloudwash container should read these credentials from environment variable.
 
@@ -115,7 +115,7 @@ vmware 		Cleanup VMWare provider
 
 ```
 # swach azure --help
- 
+
 Usage: swach azure [OPTIONS]
 
   Cleanup Azure provider
