@@ -1,0 +1,100 @@
+# CI stages to execute against Pull Requests
+name: Pull Requests
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+    PYCURL_SSL_LIBRARY: openssl
+
+jobs:
+  codechecks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Cloudwash
+        uses: actions/checkout@v3
+
+      - name: Set Up Python3
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt-get install -y libgnutls28-dev libcurl4-openssl-dev libssl-dev
+          # Uninstall pycurl - its likely not installed, but in case the ubuntu-latest packages change
+          # then compile and install it with PYCURL_SSL_LIBRARY set to openssl
+          pip install -U pip
+          pip uninstall -y pycurl
+          pip install --compile --no-cache-dir pycurl
+          pip install .[dev]
+          cp settings.yaml.template settings.yaml
+
+      - name: Pre Commit Checks
+        uses: pre-commit/action@v3.0.0
+
+      - name: Analysis (git diff)
+        if: failure()
+        run: git diff
+
+  release_to_pypi:
+    needs: codechecks
+    name: Release to PyPi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set Up Python3
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Setup and Build
+        run: |
+          pip install -U pip
+          pip install .[setup]
+          python setup.py sdist
+          python -m twine check dist/*
+
+      - name: Release to PyPi
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
+
+  cloudwash_container:
+    needs: release_to_pypi
+    name: Update Cloudwash Container image on Quay
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Quay Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: 'quay.io'
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+
+      - name: Build and push image to Quay
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile.stable
+          push: true
+          tags: quay.io/redhatqe/cloudwash:latest
