@@ -57,7 +57,13 @@ jobs:
 
       - name: Setup and Build
         run: |
+          sudo apt update
+          sudo apt-get install -y libgnutls28-dev libcurl4-openssl-dev libssl-dev
+          # Uninstall pycurl - its likely not installed, but in case the ubuntu-latest packages change
+          # then compile and install it with PYCURL_SSL_LIBRARY set to openssl
           pip install -U pip
+          pip uninstall -y pycurl
+          pip install --compile --no-cache-dir pycurl
           pip install .[setup]
           python setup.py sdist
           python -m twine check dist/*
