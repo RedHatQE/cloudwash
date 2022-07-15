@@ -8,6 +8,9 @@ PROVIDERS:
   GCE:
     PROJECT_ID:
     SERVICE_ACCOUNT:
+    # VMs that would be skipped from cleanup
+    EXCEPT_VM_LIST: []
+    # VMs that would be stopped from running states
     EXCEPT_VM_STOP_LIST: []
 
   AZURE:
@@ -17,10 +20,16 @@ PROVIDERS:
     SUBSCRIPTION_ID:
     RESOURCE_GROUP:
     REGION:
+    # VMs that would be skipped from cleanup
+    EXCEPT_VM_LIST: []
+    # VMs that would be stopped from running states
     EXCEPT_VM_STOP_LIST: []
 
   EC2:
     USERNAME:
     PASSWORD:
     REGION:
+    # VMs that would be skipped from cleanup
+    EXCEPT_VM_LIST: []
+    # VMs that would be stopped from running states
     EXCEPT_VM_STOP_LIST: []

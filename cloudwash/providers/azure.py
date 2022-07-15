@@ -9,7 +9,7 @@ from cloudwash.utils import total_running_time
 
 def _dry_vms(all_vms):
     """Filters and returns running VMs to be deleted from all VMs"""
-    _vms = {"stop": [], "delete": []}
+    _vms = {"stop": [], "delete": [], "skip": []}
     for vm in all_vms:
         # Remove the VM thats in Failed state and cant perform in assessments
         if not vm.exists:
@@ -19,14 +19,17 @@ def _dry_vms(all_vms):
         if vm.state.lower() == "vmstate.creating":
             continue
         # Match the user defined criteria in settings to delete the VM
-        if vm.name.startswith(settings.delete_vm):
-            vm_running_time = getattr(
-                total_running_time(vm), "minutes", int(settings.sla_minutes) + 1
-            )
-            if vm_running_time >= settings.sla_minutes:
-                if vm.name in settings.providers.azure.except_vm_stop_list:
-                    _vms["stop"].append(vm.name)
-                    continue
+        if vm.name in settings.providers.azure.except_vm_list:
+            _vms["skip"].append(vm.name)
+            continue
+        elif (
+            getattr(total_running_time(vm), "minutes", int(settings.sla_minutes) + 1)
+            >= settings.sla_minutes
+        ):
+            if vm.name in settings.providers.azure.except_vm_stop_list:
+                _vms["stop"].append(vm.name)
+                continue
+            elif vm.name.startswith(settings.delete_vm):
                 _vms["delete"].append(vm.name)
     return _vms
 
@@ -74,32 +77,30 @@ def cleanup(**kwargs):
             avms = dry_vms()
             if not is_dry_run:
                 remove_vms(avms=avms)
-                logger.info(
-                    f"Stopped {avms['stop']} and removed {avms['delete']} VMs from Azure Cloud."
-                )
+                logger.info(f"Stopped VMs: \n{avms['stop']}")
+                logger.info(f"Removed VMs: \n{avms['delete']}")
+                logger.info(f"Skipped VMs: \n{avms['skip']}")
         if kwargs["nics"] or kwargs["_all"]:
             rnics = dry_nics()
             if not is_dry_run:
                 azure_client.remove_nics_by_search()
-                logger.info(f"Removed following and all unused nics from Azure Cloud. \n{rnics}")
+                logger.info(f"Removed NICs: \n{rnics}")
         if kwargs["discs"] or kwargs["_all"]:
             rdiscs = dry_discs()
             if not is_dry_run:
                 azure_client.remove_discs_by_search()
-                logger.info(f"Removed following and all unused discs from Azure Cloud. \n{rdiscs}")
+                logger.info(f"Removed Discs: \n{rdiscs}")
         if kwargs["pips"] or kwargs["_all"]:
             rpips = dry_pips()
             if not is_dry_run:
                 azure_client.remove_pips_by_search()
-                logger.info(f"Removed following and all unused pips from Azure Cloud. \n{rpips}")
+                logger.info(f"Removed PIPs: \n{rpips}")
         if kwargs["_all_rg"]:
             rres = dry_resources()
             if not is_dry_run:
                 azure_client.remove_resource_group_of_old_resources(
                     hours_old=(settings.sla_minutes / 60)
                 )
-                logger.info(
-                    f"Removed following and all unused resources from Azure Cloud. \n{rres}"
-                )
+                logger.info(f"Removed Resources: \n{rres}")
         if is_dry_run:
             echo_dry(dry_data)
