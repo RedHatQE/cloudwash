@@ -16,14 +16,15 @@ def cleanup(**kwargs):
         def dry_vms():
             all_vms = ec2_client.list_vms()
             for vm in all_vms:
-                if (
-                    vm.name.startswith(settings.delete_vm)
-                    and total_running_time(vm).minutes >= settings.sla_minutes
-                ):
+                if vm.name in settings.providers.ec2.except_vm_list:
+                    dry_data["VMS"]["skip"].append(vm.name)
+                    continue
+                elif total_running_time(vm).minutes >= settings.sla_minutes:
                     if vm.name in settings.providers.ec2.except_vm_stop_list:
                         dry_data["VMS"]["stop"].append(vm.name)
                         continue
-                    dry_data["VMS"]["delete"].append(vm.name)
+                    elif vm.name.startswith(settings.delete_vm):
+                        dry_data["VMS"]["delete"].append(vm.name)
             return dry_data["VMS"]
 
         def dry_nics():
@@ -53,23 +54,23 @@ def cleanup(**kwargs):
             avms = dry_vms()
             if not is_dry_run:
                 remove_vms(avms=avms)
-                logger.info(
-                    f"Stopped {avms['stop']} and removed {avms['delete']} VMs from ec2 Cloud."
-                )
+                logger.info(f"Stopped VMs: \n{avms['stop']}")
+                logger.info(f"Removed VMs: \n{avms['delete']}")
+                logger.info(f"Skipped VMs: \n{avms['skip']}")
         if kwargs["nics"] or kwargs["_all"]:
             rnics = dry_nics()
             if not is_dry_run:
                 ec2_client.remove_all_unused_nics()
-                logger.info(f"Removed following and all unused nics from ec2 Cloud. \n{rnics}")
+                logger.info(f"Removed NICs: \n{rnics}")
         if kwargs["discs"] or kwargs["_all"]:
             rdiscs = dry_discs()
             if not is_dry_run:
                 ec2_client.remove_all_unused_volumes()
-                logger.info(f"Removed following and all unused discs from ec2 Cloud. \n{rdiscs}")
+                logger.info(f"Removed Discs: \n{rdiscs}")
         if kwargs["pips"] or kwargs["_all"]:
             rpips = dry_pips()
             if not is_dry_run:
                 ec2_client.remove_all_unused_ips()
-                logger.info(f"Removed following and all unused pips from ec2 Cloud. \n{rpips}")
+                logger.info(f"Removed PIPs: \n{rpips}")
         if is_dry_run:
             echo_dry(dry_data)

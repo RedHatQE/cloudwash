@@ -15,37 +15,39 @@ def cleanup(**kwargs):
         if kwargs["vms"] or kwargs["_all"]:
             allvms = gce_client.list_vms(zones=gce_zones())
             for vm in allvms:
-                if (
-                    vm.name.startswith(settings.delete_vm)
-                    and total_running_time(vm).minutes >= settings.sla_minutes
-                ):
+                if vm.name in settings.providers.gce.except_vm_list:
+                    dry_data["VMS"]["skip"].append(vm.name)
+                    continue
+                elif total_running_time(vm).minutes >= settings.sla_minutes:
                     if vm.name in settings.providers.gce.except_vm_stop_list:
                         dry_data["VMS"]["stop"].append(vm.name)
                         if not is_dry_run:
                             try:
                                 vm.stop()
                             except TypeError:
-                                logger.info(
-                                    f"GCE VM '{vm}' is force stopped, "
-                                    "since its listed in exception stop list."
-                                )
+                                logger.info(f"Stopped VM: {vm.name}")
                             except Exception:
-                                logger.exception(f"Could not stop the GCE VM - {vm.name}")
+                                logger.exception(f"Error stopping VM {vm.name}")
                         continue
-                    dry_data["VMS"]["delete"].append(vm.name)
-                    if not is_dry_run:
-                        try:
-                            vm.delete()
-                        # Currently there as an issue with GCE API while deleting, stopping the VM
-                        # That it throws TypeError, hence catching that error here
-                        # Remove it once its fixed
-                        except TypeError:
-                            logger.info(f"GCE VM '{vm.name}' is deleted!")
-                        except Exception:
-                            logger.exception(f"Could not delete the GCE VM - {vm.name}")
+                    elif vm.name.startswith(settings.delete_vm):
+                        dry_data["VMS"]["delete"].append(vm.name)
+                        if not is_dry_run:
+                            try:
+                                vm.delete()
+                            # There as an issue with GCE API while deleting/stopping the VM
+                            # That it throws TypeError, hence catching that error here
+                            # Remove it once its fixed
+                            except TypeError:
+                                logger.info(f"Deleted VM: {vm.name}")
+                            except Exception:
+                                logger.exception(f"Error deleting VM {vm.name}")
         if kwargs["nics"] or kwargs["_all"]:
-            logger.warning("WrapanAPI does not supports NICs operation for GCE yet!")
+            logger.warning(
+                "Cloudwash dependency 'WrapanAPI' does not supports NICs operation for GCE yet!"
+            )
         if kwargs["discs"] or kwargs["_all"]:
-            logger.warning("WrapanAPI does not supports DISCs operation for GCE yet!")
+            logger.warning(
+                "Cloudwash dependency 'WrapanAPI' does not supports DISCs operation for GCE yet!"
+            )
         if is_dry_run:
             echo_dry(dry_data)
