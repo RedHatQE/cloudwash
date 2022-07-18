@@ -16,6 +16,7 @@ _common_options = [
     click.option("--vms", is_flag=True, help="Remove only unused VMs from the provider"),
     click.option("--discs", is_flag=True, help="Remove only unused DISCs from the provider"),
     click.option("--nics", is_flag=True, help="Remove only unused NICs from the provider"),
+    click.option('--s3', is_flag=True, help='Remove S3 bucket from AWS cloud provider.'),
     click.option(
         "--all",
         "_all",
@@ -82,11 +83,11 @@ def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
 @common_options
 @click.option("--pips", is_flag=True, help="Remove only Public IPs from the provider")
 @click.pass_context
-def ec2(ctx, vms, discs, nics, pips, _all):
+def ec2(ctx, vms, discs, nics, pips, s3, _all):
     # Validate Amazon Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params["dry"]
-    ec2Cleanup(vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run)
+    ec2Cleanup(vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run, s3=s3)
 
 
 @cleanup_providers.command(help="Cleanup VMWare provider")
