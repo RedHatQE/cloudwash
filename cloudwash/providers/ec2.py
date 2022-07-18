@@ -42,6 +42,11 @@ def cleanup(**kwargs):
             [dry_data["PIPS"]["delete"].append(dpip["AllocationId"]) for dpip in rpips]
             return dry_data["PIPS"]["delete"]
 
+        def dry_s3():
+            s3_buckets = ec2_client.list_s3_bucket_names()
+            [dry_data['S3']['delete'].append(bucket_name) for bucket_name in s3_buckets]
+            return dry_data['S3']['delete']
+
         # Remove / Stop VMs
         def remove_vms(avms):
             # Remove VMs
@@ -72,5 +77,10 @@ def cleanup(**kwargs):
             if not is_dry_run:
                 ec2_client.remove_all_unused_ips()
                 logger.info(f"Removed PIPs: \n{rpips}")
+        if kwargs['s3'] or kwargs['_all']:
+            s3 = dry_s3()
+            if not is_dry_run:
+                ec2_client.delete_s3_buckets(s3)
+                logger.info(f'Removed following S3 buckets from ec2 cloud. \n{s3}')
         if is_dry_run:
             echo_dry(dry_data)
