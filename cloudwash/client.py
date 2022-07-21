@@ -7,9 +7,8 @@ from cloudwash.config import settings
 
 
 @contextmanager
-def compute_client(compute_resource):
+def compute_client(compute_resource, **kwargs):
     """The context manager for compute resource client to initiate and disconnect
-
     :param str compute_resource: The compute resource name
     """
     if compute_resource == "azure":
@@ -33,7 +32,7 @@ def compute_client(compute_resource):
         client = wrapanapi.EC2System(
             username=settings.providers.ec2.username,
             password=settings.providers.ec2.password,
-            region=settings.providers.ec2.region,
+            region=kwargs['ec2_region'],
         )
     else:
         raise ValueError(

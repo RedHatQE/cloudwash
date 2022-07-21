@@ -28,7 +28,8 @@ PROVIDERS:
   EC2:
     USERNAME:
     PASSWORD:
-    REGION:
+    # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
+    REGIONS: []
     # VMs that would be skipped from cleanup
     EXCEPT_VM_LIST: []
     # VMs that would be stopped from running states
