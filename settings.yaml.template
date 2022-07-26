@@ -26,7 +26,9 @@ PROVIDERS:
     EXCEPT_VM_STOP_LIST: []
 
   EC2:
+    # ACCESS_KEY can be used as username
     USERNAME:
+    # SECRET_KEY can be used as password
     PASSWORD:
     # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
     REGIONS: []
