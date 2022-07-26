@@ -1,5 +1,5 @@
 # CI stages to execute against Pull Requests
-name: Pull Requests
+name: PyPi & Quay Releases
 
 on:
   push:
@@ -50,6 +50,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
       - name: Set Up Python3
         uses: actions/setup-python@v3
         with:
@@ -58,22 +63,15 @@ jobs:
       - name: Setup and Build
         run: |
           sudo apt update
-          sudo apt-get install -y libgnutls28-dev libcurl4-openssl-dev libssl-dev
-          # Uninstall pycurl - its likely not installed, but in case the ubuntu-latest packages change
-          # then compile and install it with PYCURL_SSL_LIBRARY set to openssl
           pip install -U pip
-          pip uninstall -y pycurl
-          pip install --compile --no-cache-dir pycurl
-          pip install .[setup]
+          pip install setuptools_scm wheel twine
           python setup.py sdist
-          python -m twine check dist/*
 
       - name: Release to PyPi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
 
   cloudwash_container:
     needs: release_to_pypi
