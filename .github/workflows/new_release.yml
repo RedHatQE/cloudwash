@@ -43,20 +43,15 @@ jobs:
 
   release_to_pypi:
     needs: codechecks
-    name: Release to PyPi
+    name: PyPi Release
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        uses: actions/checkout@v2
 
       - name: Set Up Python3
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
@@ -64,18 +59,20 @@ jobs:
         run: |
           sudo apt update
           pip install -U pip
-          pip install setuptools_scm wheel twine
-          python setup.py sdist
+          pip install [.setup]
+          python setup.py sdist bdist_wheel
+          python -m twine check dist/*
 
       - name: Release to PyPi
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
 
   cloudwash_container:
     needs: release_to_pypi
-    name: Update Cloudwash Container image on Quay
+    name: Quay Release
     runs-on: ubuntu-latest
 
     steps:
