@@ -18,9 +18,17 @@ AWS:
             UNASSIGNED: True
         PUBLIC_IP:
             UNASSIGNED: True
+        STACKS:
+            # The CloudFormation to be deleted with prepend string, e.g stack name that starts with 'test'
+            DELETE_STACK: 'test'
+            # Number of minutes the deletable CloudFormation should be allowed to live, e.g 120 minutes = 2 Hours
+            SLA_MINUTES: 120
     EXCEPTIONS:
         VM:
             # VM names that would be skipped from cleanup
             VM_LIST: []
             # VMs that would be stopped from current running state
             STOP_LIST: []
+        STACKS:
+            # CloudFormations names that would be skipped from cleanup
+            STACK_LIST: []

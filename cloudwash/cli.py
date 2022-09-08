@@ -81,12 +81,15 @@ def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
 @cleanup_providers.command(help="Cleanup Amazon provider")
 @common_options
 @click.option("--pips", is_flag=True, help="Remove only Public IPs from the provider")
+@click.option("--stacks", is_flag=True, help="Remove only CloudFormations from the provider")
 @click.pass_context
-def aws(ctx, vms, discs, nics, pips, _all):
+def aws(ctx, vms, discs, nics, pips, stacks, _all):
     # Validate Amazon Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params["dry"]
-    awsCleanup(vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run)
+    awsCleanup(
+        vms=vms, discs=discs, nics=nics, pips=pips, stacks=stacks, _all=_all, dry_run=is_dry_run
+    )
 
 
 @cleanup_providers.command(help="Cleanup VMWare provider")

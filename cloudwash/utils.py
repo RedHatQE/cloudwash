@@ -12,6 +12,7 @@ dry_data = {
     "DISCS": {"delete": []},
     "PIPS": {"delete": []},
     "RESOURCES": {"delete": []},
+    "STACKS": {"delete": []},
 }
 dry_data.update(_vms_dict)
 
@@ -30,6 +31,7 @@ def echo_dry(dry_data=None) -> None:
     deletable_nics = dry_data["NICS"]["delete"]
     deletable_pips = dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None
     deletable_resources = dry_data["RESOURCES"]["delete"]
+    deletable_stacks = dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
     if deletable_vms or stopable_vms or skipped_vms:
         logger.info(
             f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
@@ -43,6 +45,8 @@ def echo_dry(dry_data=None) -> None:
         logger.info(f"PIPs:\n\tDeletable: {deletable_pips}")
     if deletable_resources:
         logger.info(f"RESOURCEs:\n\tDeletable: {deletable_resources}")
+    if deletable_stacks:
+        logger.info(f"STACKs:\n\tDeletable: {deletable_stacks}")
     if not any(
         [
             deletable_vms,
@@ -51,6 +55,7 @@ def echo_dry(dry_data=None) -> None:
             deletable_nics,
             deletable_pips,
             deletable_resources,
+            deletable_stacks,
         ]
     ):
         logger.info("\nNo resources are eligible for cleanup!")
