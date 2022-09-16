@@ -1,38 +1,87 @@
 ---
-# The VM to be deleted with prepend string
-DELETE_VM: 'test'
-# Number of minutes the deletable VM should be allowed to live
-SLA_MINUTES: 120
 # Compute Resources and there credentials to connect to them for cleanup
-PROVIDERS:
-  GCE:
-    PROJECT_ID:
-    SERVICE_ACCOUNT:
-    # VMs that would be skipped from cleanup
-    EXCEPT_VM_LIST: []
-    # VMs that would be stopped from running states
-    EXCEPT_VM_STOP_LIST: []
+GCE:
+    AUTH:
+        PROJECT_ID:
+        # Multiline json with Service Account details
+        SERVICE_ACCOUNT: >
+            {}
+    CRITERIA:
+        VM:
+            # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
+            DELETE_VM: 'test'
+            # Number of minutes the deletable VM should be allowed to live, e.g 120 minutes = 2 Hours
+            SLA_MINUTES: 120
+            # VMs that would be skipped from cleanup
+            EXCEPT_VM_LIST: []
+            # VMs that would be stopped from running states
+            EXCEPT_VM_STOP_LIST: []
+        DISC:
+            UNASSIGNED: True
+        NIC:
+            UNASSIGNED: True
+    EXCEPTIONS:
+        VM:
+            # VM names that would be skipped from cleanup
+            VM_LIST: []
+            # VMs that would be stopped from current running state
+            STOP_LIST: []
 
-  AZURE:
-    USERNAME:
-    PASSWORD:
-    TENANT_ID:
-    SUBSCRIPTION_ID:
-    RESOURCE_GROUP:
-    REGION:
-    # VMs that would be skipped from cleanup
-    EXCEPT_VM_LIST: []
-    # VMs that would be stopped from running states
-    EXCEPT_VM_STOP_LIST: []
+AZURE:
+    AUTH:
+        CLIENT_ID:
+        SECRET_ID:
+        TENANT_ID:
+        SUBSCRIPTION_ID:
+        RESOURCE_GROUP:
+        REGION:
+    CRITERIA:
+        VM:
+            # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
+            DELETE_VM: 'test'
+            # Number of minutes the deletable VM should be allowed to live, e.g 120 minutes = 2 Hours
+            SLA_MINUTES: 120
+        DISC:
+            UNASSIGNED: True
+        NIC:
+            UNASSIGNED: True
+        PUBLIC_IP:
+            UNASSIGNED: True
+        RESOURCE_GROUP:
+            # Delete Resource Group if all resources in resource group crossing SLA minutes
+            RESOURCES_SLA_MINUTES:
+    EXCEPTIONS:
+        VM:
+            # VM names that would be skipped from cleanup
+            VM_LIST: []
+            # VMs that would be stopped from current running state
+            STOP_LIST: []
 
-  EC2:
-    # ACCESS_KEY can be used as username
-    USERNAME:
-    # SECRET_KEY can be used as password
-    PASSWORD:
-    # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
-    REGIONS: []
-    # VMs that would be skipped from cleanup
-    EXCEPT_VM_LIST: []
-    # VMs that would be stopped from running states
-    EXCEPT_VM_STOP_LIST: []
+AWS:
+    AUTH:
+        ACCESS_KEY:
+        SECRET_KEY:
+        # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
+        REGIONS: []
+    CRITERIA:
+        VM:
+            # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
+            DELETE_VM: 'test'
+            # Number of minutes the deletable VM should be allowed to live, e.g 120 minutes = 2 Hours
+            SLA_MINUTES: 120
+            # VMs that would be skipped from cleanup
+            EXCEPT_VM_LIST: []
+            # VMs that would be stopped from running states
+            EXCEPT_VM_STOP_LIST: []
+        DISC:
+            UNASSIGNED: True
+        NIC:
+            UNASSIGNED: True
+        PUBLIC_IP:
+            UNASSIGNED: True
+    EXCEPTIONS:
+        VM:
+            # VM names that would be skipped from cleanup
+            VM_LIST: []
+            # VMs that would be stopped from current running state
+            STOP_LIST: []

@@ -7,3 +7,5 @@ settings.yaml
 **/cleanup*.log
 *.pyc
 dist/
+build/
+conf/*.yaml
