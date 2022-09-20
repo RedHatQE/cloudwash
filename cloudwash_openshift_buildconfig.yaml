@@ -10,43 +10,17 @@ items:
   spec:
     lookupPolicy:
       local: true
-
 - kind: BuildConfig
   apiVersion: build.openshift.io/v1
   metadata:
-    creationTimestamp:
     labels:
-      name: cloudwash-stable
-    name: cloudwash-stable
+      name: cloudwash
+    name: cloudwash
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: cloudwash:stable
-    resources: {}
-    runPolicy: Serial
-    source:
-      git:
-        uri: https://github.com/RedHatQE/cloudwash.git
-        ref: master
-      type: Git
-    strategy:
-      dockerStrategy:
-        dockerfilePath: Dockerfile.stable
-      type: Docker
-
-- kind: BuildConfig
-  apiVersion: build.openshift.io/v1
-  metadata:
-    creationTimestamp:
-    labels:
-      name: cloudwash-dev
-    name: cloudwash-dev
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: cloudwash:dev
+        name: cloudwash
     resources: {}
     runPolicy: Serial
     source:

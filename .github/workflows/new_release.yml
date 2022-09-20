@@ -101,6 +101,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile.stable
+          file: ./Dockerfile.dev
           push: true
-          tags: quay.io/redhatqe/cloudwash:latest
+          tags: quay.io/redhatqe/cloudwash:latest,quay.io/redhatqe/cloudwash:v${{ github.ref_name }}

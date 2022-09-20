@@ -3,7 +3,7 @@
 GCE:
     AUTH:
         PROJECT_ID:
-        # Multiline json with Service Account details
+        # Multiline json contents from Service Account key
         SERVICE_ACCOUNT: >
             {}
     CRITERIA:
