@@ -2,8 +2,8 @@ import click
 
 from cloudwash.config import validate_provider
 from cloudwash.logger import logger
+from cloudwash.providers.aws import cleanup as awsCleanup
 from cloudwash.providers.azure import cleanup as azureCleanup
-from cloudwash.providers.ec2 import cleanup as ec2Cleanup
 from cloudwash.providers.gce import cleanup as gceCleanup
 
 # Adding the pythonpath for importing modules from cloudwash packages
@@ -82,11 +82,11 @@ def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
 @common_options
 @click.option("--pips", is_flag=True, help="Remove only Public IPs from the provider")
 @click.pass_context
-def ec2(ctx, vms, discs, nics, pips, _all):
+def aws(ctx, vms, discs, nics, pips, _all):
     # Validate Amazon Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params["dry"]
-    ec2Cleanup(vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run)
+    awsCleanup(vms=vms, discs=discs, nics=nics, pips=pips, _all=_all, dry_run=is_dry_run)
 
 
 @cleanup_providers.command(help="Cleanup VMWare provider")

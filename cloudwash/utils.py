@@ -33,7 +33,7 @@ def echo_dry(dry_data=None) -> None:
     if deletable_vms or stopable_vms or skipped_vms:
         logger.info(
             f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
-            "Skip: {skipped_vms}"
+            f"Skip: {skipped_vms}"
         )
     if deletable_discs:
         logger.info(f"DISCs:\n\tDeletable: {deletable_discs}")

@@ -13,26 +13,26 @@ def compute_client(compute_resource, **kwargs):
     """
     if compute_resource == "azure":
         client = wrapanapi.AzureSystem(
-            username=settings.providers.azure.username,
-            password=settings.providers.azure.password,
-            tenant_id=settings.providers.azure.tenant_id,
-            subscription_id=settings.providers.azure.subscription_id,
+            username=settings.azure.auth.client_id,
+            password=settings.azure.auth.secret_id,
+            tenant_id=settings.azure.auth.tenant_id,
+            subscription_id=settings.azure.auth.subscription_id,
             provisioning={
-                "resource_group": settings.providers.azure.resource_group,
+                "resource_group": settings.azure.auth.resource_group,
                 "template_container": None,
-                "region_api": settings.providers.azure.region,
+                "region_api": settings.azure.auth.region,
             },
         )
     elif compute_resource == "gce":
         client = wrapanapi.GoogleCloudSystem(
-            project=settings.providers.gce.project_id,
-            service_account=json.loads(settings.providers.gce.service_account),
+            project=settings.gce.auth.project_id,
+            service_account=json.loads(settings.gce.auth.service_account),
         )
-    elif compute_resource == "ec2":
+    elif compute_resource == "aws":
         client = wrapanapi.EC2System(
-            username=settings.providers.ec2.username,
-            password=settings.providers.ec2.password,
-            region=kwargs['ec2_region'],
+            username=settings.aws.auth.access_key,
+            password=settings.aws.auth.secret_key,
+            region=kwargs['aws_region'],
         )
     else:
         raise ValueError(

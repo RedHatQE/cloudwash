@@ -19,17 +19,19 @@ def _dry_vms(all_vms):
         if vm.state.lower() == "vmstate.creating":
             continue
         # Match the user defined criteria in settings to delete the VM
-        if vm.name in settings.providers.azure.except_vm_list:
+        if vm.name in settings.azure.exception.vm.vm_list:
             _vms["skip"].append(vm.name)
             continue
         elif (
-            getattr(total_running_time(vm), "minutes", int(settings.sla_minutes) + 1)
-            >= settings.sla_minutes
+            getattr(
+                total_running_time(vm), "minutes", int(settings.azure.criteria.vm.sla_minutes) + 1
+            )
+            >= settings.azure.criteria.vm.sla_minutes
         ):
-            if vm.name in settings.providers.azure.except_vm_stop_list:
+            if vm.name in settings.azure.exception.vm.stop_list:
                 _vms["stop"].append(vm.name)
                 continue
-            elif vm.name.startswith(settings.delete_vm):
+            elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):
                 _vms["delete"].append(vm.name)
     return _vms
 
@@ -45,23 +47,30 @@ def cleanup(**kwargs):
             return dry_data["VMS"]
 
         def dry_nics():
-            rnics = azure_client.list_free_nics()
-            [dry_data["NICS"]["delete"].append(dnic) for dnic in rnics]
+            rnics = []
+            if settings.azure.criteria.nic.unassigned:
+                rnics = azure_client.list_free_nics()
+                [dry_data["NICS"]["delete"].append(dnic) for dnic in rnics]
             return rnics
 
         def dry_discs():
-            rdiscs = azure_client.list_free_discs()
-            [dry_data["DISCS"]["delete"].append(ddisc) for ddisc in rdiscs]
+            rdiscs = []
+            if settings.azure.criteria.disc.unassigned:
+                rdiscs = azure_client.list_free_discs()
+                [dry_data["DISCS"]["delete"].append(ddisc) for ddisc in rdiscs]
             return rdiscs
 
         def dry_pips():
-            rpips = azure_client.list_free_pip()
-            [dry_data["PIPS"]["delete"].append(dpip) for dpip in rpips]
+            rpips = []
+            if settings.azure.criteria.public_ip.unassigned:
+                rpips = azure_client.list_free_pip()
+                [dry_data["PIPS"]["delete"].append(dpip) for dpip in rpips]
             return rpips
 
         def dry_resources(hours_old=None):
             dry_data["RESOURCES"]["delete"] = azure_client.list_resources_from_hours_old(
-                hours_old=hours_old or (settings.sla_minutes / 60)
+                hours_old=hours_old
+                or (settings.azure.criteria.resource_group.resources_sla_minutes / 60)
             )
             return dry_data["RESOURCES"]["delete"]
 
@@ -82,24 +91,24 @@ def cleanup(**kwargs):
                 logger.info(f"Skipped VMs: \n{avms['skip']}")
         if kwargs["nics"] or kwargs["_all"]:
             rnics = dry_nics()
-            if not is_dry_run:
-                azure_client.remove_nics_by_search()
+            if not is_dry_run and rnics:
+                # azure_client.remove_nics_by_search()
                 logger.info(f"Removed NICs: \n{rnics}")
         if kwargs["discs"] or kwargs["_all"]:
             rdiscs = dry_discs()
-            if not is_dry_run:
+            if not is_dry_run and rdiscs:
                 azure_client.remove_discs_by_search()
                 logger.info(f"Removed Discs: \n{rdiscs}")
         if kwargs["pips"] or kwargs["_all"]:
             rpips = dry_pips()
-            if not is_dry_run:
+            if not is_dry_run and rpips:
                 azure_client.remove_pips_by_search()
                 logger.info(f"Removed PIPs: \n{rpips}")
         if kwargs["_all_rg"]:
             rres = dry_resources()
-            if not is_dry_run:
+            if not is_dry_run and rres:
                 azure_client.remove_resource_group_of_old_resources(
-                    hours_old=(settings.sla_minutes / 60)
+                    hours_old=(settings.azure.criteria.vm.sla_minutes / 60)
                 )
                 logger.info(f"Removed Resources: \n{rres}")
         if is_dry_run:

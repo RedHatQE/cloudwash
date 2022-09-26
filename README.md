@@ -16,9 +16,7 @@ cloudwash supports following cloud providers:
 * VMWare vCenter (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
-The list of resources it helps to clean are:
-
-> VMs, Network Interfaces, Public IPs, Disks, Azure Resource group and more.
+The list of resource types it helps to clean could be found under settings.yaml.template](https://github.com/RedHatQE/cloudwash/blob/master/settings.yaml.template) file for individual cloud providers along with cleanup criteria.
 
 ## Installation
 
@@ -51,22 +49,21 @@ $ pip install cloudwash
 ### Docker Image Installation
 
 #### From Container image registry
-The [container image](https://quay.io/repository/redhatqe/cloudwash) for cloudwash is available in quay. This image provides the cloudwash installed from released python package.
+The [container image](https://quay.io/repository/redhatqe/cloudwash) for cloudwash is available in quay. This image provides the cloudwash installed from released python package with release version tags. Latest tag always points to the latest released version tag.
 
 #### Build from local DockerFile
-This github repo contains two set of docker files, use any container building service to build from the dockerfile:
+This github repo contains a DockerFile, use any container building service to build from the dockerfile:
 
-1. **Stable Dockerfile** - Build container from `Dockerfile.stable` that should build a container from released python package of cloudwash. This would be very similar to quiy.io image above.
-2. **Development Dockerfile** - Build container from `Dockerfile.dev` that should build a container from the cloudwash github master branch giving the access to pre-released features.
+Build container from `Dockerfile.dev` that should build a container from the cloudwash github master branch giving the access to pre-released features.
 
 
 ### OC BuildConfig Installation
-This github repo provides the ready to use BuildConfig on OCP / Kubernetes. The build config should create buildconfigs to build stable and dev container images. Use those image to build cloudwash pod.
+This github repo provides the ready to use BuildConfig on OCP / Kubernetes. The build config should create buildconfig to build master branch based container image. Use the image to build cloudwash pod.
 
 
 ## Configuration
 
-The `cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml`, it also allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`.
+The `cloudwash` uses the `DynaConf` configuration python module to access the data in `settings.yaml` or conf directory settings, it also allows an unique way of declaring secrets via Environment variables instead of putting in plain `settings.yaml`.
 
 e.g: The Azure password field can be set via environment variable by exporting the environment variable
 
@@ -76,7 +73,7 @@ e.g: The Azure password field can be set via environment variable by exporting t
 
 #### Configuration with PyPi package:
 
-Copy `settings.yaml.template` to local `~/cloudwash` directory as `settings.yaml`, update it with the cloud provider credentials and other configuration details for successful resource reporting and cleanup.
+Copy/Download `settings.yaml.template` to local `~/cloudwash` directory as `settings.yaml`, update it with the cloud provider credentials and other configuration details for successful resource reporting and cleanup.
 
 
 #### Configuration with cloudwash container images:
@@ -96,7 +93,7 @@ _Or_ - Export/Set the environment variables for all or only sensitive credential
 
 Usage: swach [OPTIONS] COMMAND [ARGS]...
 
-A Cleanup Utility to remove the VMs, Discs and Nics from Providers!
+A Cleanup Utility to remove cloud resources from cloud Providers!
 
 Options:
 -d, --dry Only show what will be removed from Providers!
@@ -104,7 +101,7 @@ Options:
 
 Commands:
 azure		Cleanup Azure provider
-ec2			Cleanup Amazon provider
+aws			Cleanup Amazon provider
 gce			Cleanup GCE provider
 openstack	Cleanup OSP provider
 rhev 		Cleanup RHEV provider
@@ -131,7 +128,7 @@ Options:
 
 ```
 
-* Cleanup Dry Run (Monitor only mode):
+* Cleanup Dry Run (Monitor only mode using option `-d`):
 
 ```
 # swach -d azure --all
