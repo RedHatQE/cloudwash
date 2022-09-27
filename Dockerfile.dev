@@ -17,9 +17,8 @@ RUN git clone --depth=1 https://github.com/RedHatQE/cloudwash.git && \
     pip install --upgrade pip && \
     pip install . && \
     cp settings.yaml.template settings.yaml
-    for conffile in conf/*.yaml.template; do cp -- "$conffile" "${conffile%.yaml.template}.yaml"; done
-# Workaround for the issue DistributionNotFound: The 'azure-mgmt-media~=1.0.0rc2' distribution was not found and is required by azure-mgmt
-# RUN pip install azure-mgmt-media==1.0.0rc2
+
+RUN /bin/bash -c 'cd ${CLOUDWASH_DIR}; for conffile in conf/*.yaml.template; do cp -- "$conffile" "${conffile%.yaml.template}.yaml"; done'
 
 # adding .profile to environment variables, so it will be kept between shell sessions
 RUN echo "source ${VIRTUAL_ENV}/.profile" >> ${VIRTUAL_ENV}/bin/activate && touch ${VIRTUAL_ENV}/.profile
