@@ -19,7 +19,7 @@ def _dry_vms(all_vms):
         if vm.state.lower() == "vmstate.creating":
             continue
         # Match the user defined criteria in settings to delete the VM
-        if vm.name in settings.azure.exception.vm.vm_list:
+        if vm.name in settings.azure.exceptions.vm.vm_list:
             _vms["skip"].append(vm.name)
             continue
         elif (
@@ -28,7 +28,7 @@ def _dry_vms(all_vms):
             )
             >= settings.azure.criteria.vm.sla_minutes
         ):
-            if vm.name in settings.azure.exception.vm.stop_list:
+            if vm.name in settings.azure.exceptions.vm.stop_list:
                 _vms["stop"].append(vm.name)
                 continue
             elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):

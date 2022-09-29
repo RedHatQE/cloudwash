@@ -25,11 +25,11 @@ def cleanup(**kwargs):
             def dry_vms():
                 all_vms = aws_client.list_vms()
                 for vm in all_vms:
-                    if vm.name in settings.aws.exception.vm.vm_list:
+                    if vm.name in settings.aws.exceptions.vm.vm_list:
                         dry_data["VMS"]["skip"].append(vm.name)
                         continue
                     elif total_running_time(vm).minutes >= settings.aws.criteria.vm.sla_minutes:
-                        if vm.name in settings.aws.exception.vm.stop_list:
+                        if vm.name in settings.aws.exceptions.vm.stop_list:
                             dry_data["VMS"]["stop"].append(vm.name)
                             continue
                         elif vm.name.startswith(settings.aws.criteria.vm.delete_vm):
