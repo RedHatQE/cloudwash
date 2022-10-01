@@ -14,10 +14,6 @@ AZURE:
             DELETE_VM: 'test'
             # Number of minutes the deletable VM should be allowed to live, e.g 120 minutes = 2 Hours
             SLA_MINUTES: 120
-            # VMs that would be skipped from cleanup
-            EXCEPT_VM_LIST: []
-            # VMs that would be stopped from running states
-            EXCEPT_VM_STOP_LIST: []
         DISC:
             UNASSIGNED: True
         NIC:

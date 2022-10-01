@@ -15,11 +15,11 @@ def cleanup(**kwargs):
         if kwargs["vms"] or kwargs["_all"]:
             allvms = gce_client.list_vms(zones=gce_zones())
             for vm in allvms:
-                if vm.name in settings.gce.exception.vm.vm_list:
+                if vm.name in settings.gce.exceptions.vm.vm_list:
                     dry_data["VMS"]["skip"].append(vm.name)
                     continue
                 elif total_running_time(vm).minutes >= settings.gce.criteria.vm.sla_minutes:
-                    if vm.name in settings.gce.exception.vm.stop_list:
+                    if vm.name in settings.gce.exceptions.vm.stop_list:
                         dry_data["VMS"]["stop"].append(vm.name)
                         if not is_dry_run:
                             try:
