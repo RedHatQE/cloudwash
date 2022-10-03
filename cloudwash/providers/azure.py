@@ -92,7 +92,7 @@ def cleanup(**kwargs):
         if kwargs["nics"] or kwargs["_all"]:
             rnics = dry_nics()
             if not is_dry_run and rnics:
-                # azure_client.remove_nics_by_search()
+                azure_client.remove_nics_by_search()
                 logger.info(f"Removed NICs: \n{rnics}")
         if kwargs["discs"] or kwargs["_all"]:
             rdiscs = dry_discs()
