@@ -1,9 +1,7 @@
 AZURE:
     AUTH:
-        # CLIENT_ID
-        USERNAME:
-        # SECRET_ID
-        PASSWORD:
+        CLIENT_ID:
+        SECRET_ID:
         TENANT_ID:
         SUBSCRIPTION_ID:
         RESOURCE_GROUP:
