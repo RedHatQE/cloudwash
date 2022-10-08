@@ -1,5 +1,6 @@
 import click
 
+from cloudwash.config import settings
 from cloudwash.config import validate_provider
 from cloudwash.logger import logger
 from cloudwash.providers.aws import cleanup as awsCleanup
@@ -34,13 +35,24 @@ def common_options(func):
 # Click Interactive for Cloud Resources Cleanup
 
 
-@click.group(help="A Cleanup Utility to remove the VMs, Discs and Nics from Providers!")
+@click.group(
+    help="A Cleanup Utility to remove the VMs, Discs and Nics from Providers!",
+    invoke_without_command=True,
+)
+@click.option("--version", is_flag=True, help="Get installed version of cloudwash in system")
 @click.option("-d", "--dry", is_flag=True, help="Only show what will be removed from Providers!")
-def cleanup_providers(dry):
-    if dry:
-        logger.info("\n<<<<<<< Running the cleanup script in DRY RUN mode >>>>>>> ")
-    else:
-        logger.info("\n<<<<<<< Running the cleanup script in ACTION mode >>>>>>> ")
+@click.pass_context
+def cleanup_providers(ctx, dry, version):
+    if version:
+        import pkg_resources
+
+        cloudwash_version = pkg_resources.get_distribution("cloudwash").version
+        click.echo(f"Version: {cloudwash_version}")
+        click.echo(f"Settings File: {settings.settings_file}")
+    if ctx.invoked_subcommand:
+        logger.info(
+            f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} RUN mode >>>>>>>"
+        )
 
 
 @cleanup_providers.command(help="Cleanup GCE provider")
@@ -97,7 +109,7 @@ def aws(ctx, vms, discs, nics, pips, stacks, _all):
 @click.pass_context
 def vmware(ctx, vms, discs, nics, _all):
     validate_provider(ctx.command.name)
-    # Further TO_BE_IMPLEMENTED
+    # TODO: Further TO_BE_IMPLEMENTED
 
 
 @cleanup_providers.command(help="Cleanup RHEV provider")
@@ -105,7 +117,7 @@ def vmware(ctx, vms, discs, nics, _all):
 @click.pass_context
 def rhev(ctx, vms, discs, nics, _all):
     validate_provider(ctx.command.name)
-    # Further TO_BE_IMPLEMENTED
+    # TODO: Further TO_BE_IMPLEMENTED
 
 
 @cleanup_providers.command(help="Cleanup OSP provider")
@@ -113,7 +125,7 @@ def rhev(ctx, vms, discs, nics, _all):
 @click.pass_context
 def openstack(ctx, vms, discs, nics, _all):
     validate_provider(ctx.command.name)
-    # Further TO_BE_IMPLEMENTED
+    # TODO: Further TO_BE_IMPLEMENTED
 
 
 if __name__ == "__main__":
