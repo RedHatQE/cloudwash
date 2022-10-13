@@ -1,3 +1,8 @@
+[![CodeQL](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml)
+[![Pull Requests](https://github.com/RedHatQE/cloudwash/actions/workflows/pull_request.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/pull_request.yml)
+[![PyPi & Quay Releases](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml)
+[![pages-build-deployment](https://github.com/RedHatQE/cloudwash/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/pages/pages-build-deployment)
+
 # Cloudwash
 
 ## Introduction
