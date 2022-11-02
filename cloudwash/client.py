@@ -18,9 +18,9 @@ def compute_client(compute_resource, **kwargs):
             tenant_id=settings.azure.auth.tenant_id,
             subscription_id=settings.azure.auth.subscription_id,
             provisioning={
-                "resource_group": settings.azure.auth.resource_group,
+                "resource_group": kwargs['resource_group'],
                 "template_container": None,
-                "region_api": settings.azure.auth.region,
+                "region_api": kwargs['azure_region'],
             },
         )
     elif compute_resource == "gce":

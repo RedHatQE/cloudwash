@@ -29,8 +29,10 @@ AZURE:
         SECRET_ID:
         TENANT_ID:
         SUBSCRIPTION_ID:
-        RESOURCE_GROUP:
-        REGION:
+        # Multiple resource groups can be added like ["foo"], ["foo", "bar"] or ["all"] for all RGs
+        RESOURCE_GROUPS: []
+        # Multiple regions can be added like ["eastus2"] or ["northeurope", "eastus2", "westus"] or ["all"] for all regions
+        REGIONS: []
     CRITERIA:
         VM:
             # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
@@ -44,14 +46,21 @@ AZURE:
         PUBLIC_IP:
             UNASSIGNED: True
         RESOURCE_GROUP:
+            # Select AND to match all criteria or OR to match any one of them
+            LOGIC: AND
+            # Group to be deleted with prepend string, e.g. resource group name that starts with 'test'
+            DELETE_GROUP:
             # Delete Resource Group if all resources in resource group crossing SLA minutes
-            RESOURCES_SLA_MINUTES:
+            RESOURCES_SLA_MINUTES: 120
     EXCEPTIONS:
         VM:
             # VM names that would be skipped from cleanup
             VM_LIST: []
             # VMs that would be stopped from current running state
             STOP_LIST: []
+        GROUP:
+            # Resource groups that would be skipped from cleanup
+            RG_LIST: []
 
 AWS:
     AUTH:
