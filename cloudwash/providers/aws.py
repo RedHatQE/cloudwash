@@ -10,10 +10,10 @@ from cloudwash.utils import total_running_time
 def cleanup(**kwargs):
 
     is_dry_run = kwargs["dry_run"]
-    data = ['VMS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
+    data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
     regions = settings.aws.auth.regions
-    with compute_client("aws", aws_region="us-west-2") as client:
-        if "all" in regions:
+    if "all" in regions:
+        with compute_client("aws", aws_region="us-west-2") as client:
             regions = client.list_regions()
     for region in regions:
         dry_data['VMS']['stop'] = []
