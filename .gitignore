@@ -3,6 +3,7 @@ settings.yaml
 .idea
 .cache/
 .eggs
+.env/
 *.egg-info
 **/cleanup*.log
 *.pyc

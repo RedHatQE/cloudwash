@@ -23,7 +23,7 @@ def echo_dry(dry_data=None) -> None:
     :param dict dry_data: The deletable resources dry data of a Compute Resource,
         it follows the format of module scoped `dry_data` variable in this module
     """
-    logger.info("\n=========== DRY SUMMARY ============\n")
+    pprint("blue", "\n=========== DRY SUMMARY ============\n")
     deletable_vms = dry_data["VMS"]["delete"]
     stopable_vms = dry_data["VMS"]["stop"]
     skipped_vms = dry_data["VMS"]["skip"]
@@ -58,7 +58,7 @@ def echo_dry(dry_data=None) -> None:
             deletable_stacks,
         ]
     ):
-        logger.info("\nNo resources are eligible for cleanup!")
+        pprint("yellow", "\nNo resources are eligible for cleanup!")
     logger.info("\n====================================\n")
 
 
@@ -107,3 +107,14 @@ def gce_zones() -> list:
     _zones_combo = {**_bcds, **_abcfs, **_abcs}
     zones = [f"{loc}-{zone}" for loc, zones in _zones_combo.items() for zone in zones]
     return zones
+
+
+def pprint(color, data):
+    colors = {
+        "blue": "\033[94m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+        "red": "\033[91m",
+        "ENDC": "\033[0m",
+    }
+    print(f"{colors[color]}{data}{colors['ENDC']}")
