@@ -1,9 +1,10 @@
-FROM registry.access.redhat.com/ubi8/python-38:latest
+FROM quay.io/fedora/python-311:latest
 MAINTAINER "https://github.com/RedHatQE"
 
-ENV VIRTUAL_ENV="/opt/app-root" \
-    HOME="/opt/app-root/src" \
-    CLOUDWASH_DIR="/opt/app-root/src/cloudwash" \
+# HOME and APP_ROOT come from the base image - https://github.com/sclorg/s2i-python-container
+# HOME=/opt/app-root/src
+# APP_ROOT=/opt/app-root
+ENV CLOUDWASH_DIR="${HOME}/cloudwash" \
     PYCURL_SSL_LIBRARY=openssl
 
 USER 0
@@ -21,13 +22,11 @@ RUN git clone --depth=1 https://github.com/RedHatQE/cloudwash.git && \
 RUN /bin/bash -c 'cd ${CLOUDWASH_DIR}; for conffile in conf/*.yaml.template; do cp -- "$conffile" "${conffile%.yaml.template}.yaml"; done'
 
 # adding .profile to environment variables, so it will be kept between shell sessions
-RUN echo "source ${VIRTUAL_ENV}/.profile" >> ${VIRTUAL_ENV}/bin/activate && touch ${VIRTUAL_ENV}/.profile
+RUN echo "source ${APP_ROOT}/.profile" >> ${APP_ROOT}/bin/activate && touch ${APP_ROOT}/.profile
 
 # arbitrary UID handling starting from virtualenv directory for pip permissions
 USER 0
-RUN chgrp -R 0 ${VIRTUAL_ENV} && \
-    chmod -R g+rwX ${VIRTUAL_ENV} && \
-    fix-permissions ${VIRTUAL_ENV} -P
-
+RUN fix-permissions ${APP_ROOT} -P && \
+    git config --global --add safe.directory ${CLOUDWASH_DIR}
 USER 1001
 WORKDIR "${CLOUDWASH_DIR}"
