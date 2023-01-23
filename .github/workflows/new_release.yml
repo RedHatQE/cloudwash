@@ -13,14 +13,17 @@ jobs:
   codechecks:
     name: Code Quality
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
     steps:
       - name: Checkout Cloudwash
         uses: actions/checkout@v3
 
-      - name: Set Up Python3
+      - name: Set Up Python-${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Dependencies
         run: |
@@ -53,7 +56,7 @@ jobs:
       - name: Set Up Python3
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.11
 
       - name: Setup and Build
         run: |
