@@ -1,44 +1,19 @@
-import json
 from contextlib import contextmanager
-
-import wrapanapi
-
-from cloudwash.config import settings
 
 
 @contextmanager
-def compute_client(compute_resource, **kwargs):
+def compute_client(compute_resource, client=None):
     """The context manager for compute resource client to initiate and disconnect
     :param str compute_resource: The compute resource name
+    :param obj client: Client object
     """
-    if compute_resource == "azure":
-        client = wrapanapi.AzureSystem(
-            username=settings.azure.auth.client_id,
-            password=settings.azure.auth.secret_id,
-            tenant_id=settings.azure.auth.tenant_id,
-            subscription_id=settings.azure.auth.subscription_id,
-            provisioning={
-                "resource_group": kwargs['resource_group'],
-                "template_container": None,
-                "region_api": kwargs['azure_region'],
-            },
-        )
-    elif compute_resource == "gce":
-        client = wrapanapi.GoogleCloudSystem(
-            project=settings.gce.auth.project_id,
-            service_account=json.loads(settings.gce.auth.service_account),
-        )
-    elif compute_resource == "aws":
-        client = wrapanapi.EC2System(
-            username=settings.aws.auth.access_key,
-            password=settings.aws.auth.secret_key,
-            region=kwargs['aws_region'],
-        )
+    supported_providers = ["azure", "gce", "aws"]
+    if compute_resource in supported_providers:
+        client = client
     else:
         raise ValueError(
-            f"{compute_resource} is an incorrect value. It should be one of azure or gce or ec2"
+            f"{compute_resource} is an incorrect value. It should be one of {supported_providers}"
         )
-
     try:
         yield client
     finally:
