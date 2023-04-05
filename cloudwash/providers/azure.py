@@ -1,6 +1,6 @@
 """Azure CR Cleanup Utilities"""
 from cloudwash.client import compute_client
-from cloudwash.config import settings
+from cloudwash.config import generate_settings
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -10,6 +10,8 @@ from cloudwash.utils import total_running_time
 def _dry_vms(all_vms):
     """Filters and returns running VMs to be deleted from all VMs"""
     _vms = {"stop": [], "delete": [], "skip": []}
+    settings = generate_settings(kwargs["settings_path"])
+
     for vm in all_vms:
         # Remove the VM that's in Failed state and cant perform in assessments
         if not vm.exists:
@@ -46,14 +48,14 @@ def cleanup(**kwargs):
     if "all" in regions:
         # non-existent RG can be chosen for query
         # as it's never accessed and is only stored within wrapper
-        with compute_client("azure", azure_region="us-west", resource_group="foo") as azure_client:
+        with compute_client("azure", azure_region="us-west", resource_group="foo", settings=settings) as azure_client:
             regions = list(zip(*azure_client.list_region()))[0]
 
     for region in regions:
         if "all" in groups:
             # non-existent RG can be chosen for query
             # as it's never accessed and is only stored within wrapper
-            with compute_client("azure", azure_region=region, resource_group="foo") as azure_client:
+            with compute_client("azure", azure_region=region, resource_group="foo", settings=settings) as azure_client:
                 groups = azure_client.list_resource_groups()
 
         for group in groups:
@@ -62,7 +64,7 @@ def cleanup(**kwargs):
             for items in data:
                 dry_data[items]['delete'] = []
 
-            with compute_client("azure", azure_region=region, resource_group=group) as azure_client:
+            with compute_client("azure", azure_region=region, resource_group=group, settings=settings) as azure_client:
                 # Dry Data Collection Defs
                 def dry_vms():
                     all_vms = azure_client.list_vms()

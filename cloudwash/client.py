@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 import wrapanapi
 
-from cloudwash.config import settings
+from cloudwash.config import generate_settings
 
 
 @contextmanager
@@ -11,6 +11,8 @@ def compute_client(compute_resource, **kwargs):
     """The context manager for compute resource client to initiate and disconnect
     :param str compute_resource: The compute resource name
     """
+    settings = kwargs["settings"]
+
     if compute_resource == "azure":
         client = wrapanapi.AzureSystem(
             username=settings.azure.auth.client_id,
