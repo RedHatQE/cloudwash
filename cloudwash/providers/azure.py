@@ -39,7 +39,7 @@ def _dry_vms(all_vms):
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
 
-    data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES']
+    data = ['VMS', 'NICS', 'DISCS', 'IMAGES', 'PIPS', 'RESOURCES']
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
 
@@ -97,6 +97,20 @@ def cleanup(**kwargs):
                     )
                     return dry_data["RESOURCES"]["delete"]
 
+                def dry_images():
+                    remove_images = []
+                    if settings.azure.criteria.image.unassigned:
+                        images_list = azure_client.list_compute_images_by_resource_group()
+                        image_names = [image.name for image in images_list]
+                        # Filter out the images not to be removed.
+                        remove_images = [
+                            image
+                            for image in image_names
+                            if image not in settings.azure.exceptions.images
+                        ]
+                        dry_data["IMAGES"]["delete"].extend(remove_images)
+                    return remove_images
+
                 # Remove / Stop VMs
                 def remove_vms(avms):
                     # Remove VMs
@@ -129,6 +143,10 @@ def cleanup(**kwargs):
                     if not is_dry_run and rpips:
                         azure_client.remove_pips_by_search()
                         logger.info(f"Removed PIPs: \n{rpips}")
+                if kwargs["images"] or kwargs["_all"]:
+                    rimages = dry_images()
+                    logger.info(f"Removed Images: \n{rimages}")
+
                 if kwargs["_all_rg"]:
                     sla_time = settings.azure.criteria.resource_group.resources_sla_minutes
 
