@@ -53,6 +53,27 @@ def cleanup(**kwargs):
                     [dry_data["DISCS"]["delete"].append(ddisc["VolumeId"]) for ddisc in rdiscs]
                 return rdiscs
 
+            def dry_images():
+                rimages = []
+                if settings.aws.criteria.image.unassigned:
+                    rimages = aws_client.list_templates(executable_by_me=False, owned_by_me=True)
+                    free_images = aws_client.filter_free_images(
+                        image_list=[image.raw.image_id for image in rimages]
+                    )
+                    remove_images = [
+                        image
+                        for image in free_images
+                        if image not in settings.aws.exceptions.images
+                    ]
+                    if settings.aws.criteria.image.delete_pattern:
+                        remove_images = [
+                            image
+                            for image in remove_images
+                            if not image.startswith(settings.aws.criteria.image.delete_pattern)
+                        ]
+                    dry_data["IMAGES"]["delete"].extend(remove_images)
+                return remove_images
+
             def dry_pips():
                 rpips = []
                 if settings.aws.criteria.public_ip.unassigned:
@@ -106,6 +127,12 @@ def cleanup(**kwargs):
                 if not is_dry_run and rdiscs:
                     aws_client.remove_all_unused_volumes()
                     logger.info(f"Removed Discs: \n{rdiscs}")
+            if kwargs["images"] or kwargs["_all"]:
+                rimages = dry_images()
+                if not is_dry_run and rimages:
+                    aws_client.delete_images(image_list=rimages)
+                    logger.info(f"Removed Images: \n{rimages}")
+
             if kwargs["pips"] or kwargs["_all"]:
                 rpips = dry_pips()
                 if not is_dry_run and rpips:

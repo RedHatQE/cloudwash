@@ -100,7 +100,9 @@ def cleanup(**kwargs):
                 def dry_images():
                     remove_images = []
                     if settings.azure.criteria.image.unassigned:
-                        images_list = azure_client.list_compute_images_by_resource_group()
+                        images_list = azure_client.list_compute_images_by_resource_group(
+                            free_images=True
+                        )
                         image_names = [image.name for image in images_list]
                         # Filter out the images not to be removed.
                         remove_images = [
@@ -108,6 +110,14 @@ def cleanup(**kwargs):
                             for image in image_names
                             if image not in settings.azure.exceptions.images
                         ]
+                        if settings.azure.criteria.image.delete_pattern:
+                            remove_images = [
+                                image
+                                for image in remove_images
+                                if not image.startswith(
+                                    settings.azure.criteria.image.delete_pattern
+                                )
+                            ]
                         dry_data["IMAGES"]["delete"].extend(remove_images)
                     return remove_images
 
@@ -145,7 +155,9 @@ def cleanup(**kwargs):
                         logger.info(f"Removed PIPs: \n{rpips}")
                 if kwargs["images"] or kwargs["_all"]:
                     rimages = dry_images()
-                    logger.info(f"Removed Images: \n{rimages}")
+                    if not is_dry_run and rimages:
+                        azure_client.delete_compute_image_by_name(image_list=rimages)
+                        logger.info(f"Removed Images: \n{rimages}")
 
                 if kwargs["_all_rg"]:
                     sla_time = settings.azure.criteria.resource_group.resources_sla_minutes
