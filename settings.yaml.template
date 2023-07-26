@@ -45,7 +45,7 @@ AZURE:
             UNASSIGNED: True
         IMAGE:
             # Image name starts with
-            DELETE_PATTERN:
+            DELETE_IMAGE:
 
             UNASSIGNED: True
         PUBLIC_IP:
@@ -84,6 +84,12 @@ AWS:
             UNASSIGNED: True
         NIC:
             UNASSIGNED: True
+        # Image name starts with
+        IMAGE:
+            # Image name starts with
+            DELETE_IMAGE:
+
+            UNASSIGNED: True
         PUBLIC_IP:
             UNASSIGNED: True
         STACKS:
@@ -100,3 +106,4 @@ AWS:
         STACKS:
             # CloudFormations names that would be skipped from cleanup
             STACK_LIST: []
+        IMAGES: []

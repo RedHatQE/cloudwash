@@ -57,7 +57,7 @@ def cleanup(**kwargs):
                 rimages = []
                 if settings.aws.criteria.image.unassigned:
                     rimages = aws_client.list_templates(executable_by_me=False, owned_by_me=True)
-                    free_images = aws_client.filter_free_images(
+                    free_images = aws_client.list_free_images(
                         image_list=[image.raw.image_id for image in rimages]
                     )
                     remove_images = [
@@ -65,11 +65,11 @@ def cleanup(**kwargs):
                         for image in free_images
                         if image not in settings.aws.exceptions.images
                     ]
-                    if settings.aws.criteria.image.delete_pattern:
+                    if settings.aws.criteria.image.delete_image:
                         remove_images = [
                             image
                             for image in remove_images
-                            if not image.startswith(settings.aws.criteria.image.delete_pattern)
+                            if image.startswith(settings.aws.criteria.image.delete_image)
                         ]
                     dry_data["IMAGES"]["delete"].extend(remove_images)
                 return remove_images

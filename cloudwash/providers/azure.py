@@ -110,13 +110,11 @@ def cleanup(**kwargs):
                             for image in image_names
                             if image not in settings.azure.exceptions.images
                         ]
-                        if settings.azure.criteria.image.delete_pattern:
+                        if settings.azure.criteria.image.delete_image:
                             remove_images = [
                                 image
                                 for image in remove_images
-                                if not image.startswith(
-                                    settings.azure.criteria.image.delete_pattern
-                                )
+                                if image.startswith(settings.azure.criteria.image.delete_image)
                             ]
                         dry_data["IMAGES"]["delete"].extend(remove_images)
                     return remove_images
@@ -156,7 +154,7 @@ def cleanup(**kwargs):
                 if kwargs["images"] or kwargs["_all"]:
                     rimages = dry_images()
                     if not is_dry_run and rimages:
-                        azure_client.delete_compute_image_by_name(image_list=rimages)
+                        azure_client.delete_compute_image_by_resource_group(image_list=rimages)
                         logger.info(f"Removed Images: \n{rimages}")
 
                 if kwargs["_all_rg"]:

@@ -20,7 +20,7 @@ AZURE:
             UNASSIGNED: True
         IMAGE:
             # Image name starts with
-            DELETE_PATTERN:
+            DELETE_IMAGE:
 
             UNASSIGNED: True
         PUBLIC_IP:
