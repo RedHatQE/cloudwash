@@ -18,6 +18,11 @@ AZURE:
             UNASSIGNED: True
         NIC:
             UNASSIGNED: True
+        IMAGE:
+            # Image name starts with
+            DELETE_IMAGE:
+
+            UNASSIGNED: True
         PUBLIC_IP:
             UNASSIGNED: True
         RESOURCE_GROUP:
@@ -36,3 +41,4 @@ AZURE:
         GROUP:
             # Resource groups that would be skipped from cleanup
             RG_LIST: []
+        IMAGES: []
