@@ -1,6 +1,6 @@
 """ec2 CR Cleanup Utilities"""
 from cloudwash.client import compute_client
-from cloudwash.config import settings
+from cloudwash.config import generate_settings
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -10,17 +10,19 @@ from cloudwash.utils import total_running_time
 def cleanup(**kwargs):
 
     is_dry_run = kwargs["dry_run"]
+    settings = generate_settings(kwargs["settings_path"])
+
     data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
     regions = settings.aws.auth.regions
     if "all" in regions:
-        with compute_client("aws", aws_region="us-west-2") as client:
+        with compute_client("aws", aws_region="us-west-2", settings=settings) as client:
             regions = client.list_regions()
     for region in regions:
         dry_data['VMS']['stop'] = []
         dry_data['VMS']['skip'] = []
         for items in data:
             dry_data[items]['delete'] = []
-        with compute_client("aws", aws_region=region) as aws_client:
+        with compute_client("aws", aws_region=region, settings=settings) as aws_client:
             # Dry Data Collection Defs
             def dry_vms():
                 all_vms = aws_client.list_vms()

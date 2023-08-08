@@ -1,6 +1,6 @@
 import click
 
-from cloudwash.config import settings
+from cloudwash.config import generate_settings
 from cloudwash.config import validate_provider
 from cloudwash.logger import logger
 from cloudwash.providers.aws import cleanup as awsCleanup
@@ -14,6 +14,7 @@ from cloudwash.providers.gce import cleanup as gceCleanup
 # Common Click utils
 
 _common_options = [
+    click.option("-s", "--settings-path", type=str, help="Path to settings file", default=None),
     click.option("--vms", is_flag=True, help="Remove only unused VMs from the provider"),
     click.option("--discs", is_flag=True, help="Remove only unused DISCs from the provider"),
     click.option("--nics", is_flag=True, help="Remove only unused NICs from the provider"),
@@ -48,7 +49,7 @@ def cleanup_providers(ctx, dry, version):
 
         cloudwash_version = pkg_resources.get_distribution("cloudwash").version
         click.echo(f"Version: {cloudwash_version}")
-        click.echo(f"Settings File: {settings.settings_file}")
+        # click.echo(f"Settings File: {settings.settings_file}")
     if ctx.invoked_subcommand:
         logger.info(
             f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} RUN mode >>>>>>>"
@@ -58,11 +59,12 @@ def cleanup_providers(ctx, dry, version):
 @cleanup_providers.command(help="Cleanup GCE provider")
 @common_options
 @click.pass_context
-def gce(ctx, vms, discs, nics, _all):
+def gce(ctx, settings_path, vms, discs, nics, _all):
     # Validate GCE Settings
-    validate_provider(ctx.command.name)
+    settings = generate_settings(settings_path)
+    validate_provider(ctx.command.name, settings)
     is_dry_run = ctx.parent.params["dry"]
-    gceCleanup(vms=vms, discs=discs, nics=nics, _all=_all, dry_run=is_dry_run)
+    gceCleanup(vms=vms, discs=discs, nics=nics, _all=_all, dry_run=is_dry_run, settings=settings)
 
 
 @cleanup_providers.command(help="Cleanup Azure provider")
@@ -75,9 +77,10 @@ def gce(ctx, vms, discs, nics, _all):
     help="Remove resource group only if all resources are older than SLA",
 )
 @click.pass_context
-def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
+def azure(ctx, settings_path, vms, discs, nics, pips, _all, _all_rg):
     # Validate Azure Settings
-    validate_provider(ctx.command.name)
+    settings = generate_settings(settings_path)
+    validate_provider(ctx.command.name, settings)
     is_dry_run = ctx.parent.params["dry"]
     azureCleanup(
         vms=vms,
@@ -87,6 +90,7 @@ def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
         _all=_all,
         _all_rg=_all_rg,
         dry_run=is_dry_run,
+        settings=settings
     )
 
 
@@ -95,12 +99,13 @@ def azure(ctx, vms, discs, nics, pips, _all, _all_rg):
 @click.option("--pips", is_flag=True, help="Remove only Public IPs from the provider")
 @click.option("--stacks", is_flag=True, help="Remove only CloudFormations from the provider")
 @click.pass_context
-def aws(ctx, vms, discs, nics, pips, stacks, _all):
+def aws(ctx, settings_path, vms, discs, nics, pips, stacks, _all):
     # Validate Amazon Settings
-    validate_provider(ctx.command.name)
+    settings = generate_settings(settings_path)
+    validate_provider(ctx.command.name, settings)
     is_dry_run = ctx.parent.params["dry"]
     awsCleanup(
-        vms=vms, discs=discs, nics=nics, pips=pips, stacks=stacks, _all=_all, dry_run=is_dry_run
+        vms=vms, discs=discs, nics=nics, pips=pips, stacks=stacks, _all=_all, dry_run=is_dry_run, settings=settings
     )
 
 
