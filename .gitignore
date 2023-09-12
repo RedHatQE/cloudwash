@@ -9,3 +9,4 @@ settings.yaml
 dist/
 build/
 conf/*.yaml
+vcd_sdk.log
