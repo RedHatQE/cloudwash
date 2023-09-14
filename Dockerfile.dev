@@ -30,3 +30,6 @@ RUN fix-permissions ${APP_ROOT} -P && \
     git config --global --add safe.directory ${CLOUDWASH_DIR}
 USER 1001
 WORKDIR "${CLOUDWASH_DIR}"
+
+ENTRYPOINT ["swach"]
+CMD ["--help"]
