@@ -6,6 +6,7 @@ from cloudwash.logger import logger
 from cloudwash.providers.aws import cleanup as awsCleanup
 from cloudwash.providers.azure import cleanup as azureCleanup
 from cloudwash.providers.gce import cleanup as gceCleanup
+from cloudwash.providers.vmware import cleanup as vmwareCleanup
 
 # Adding the pythonpath for importing modules from cloudwash packages
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
@@ -119,7 +120,8 @@ def aws(ctx, vms, discs, nics, images, pips, stacks, _all):
 @click.pass_context
 def vmware(ctx, vms, discs, nics, _all):
     validate_provider(ctx.command.name)
-    # TODO: Further TO_BE_IMPLEMENTED
+    is_dry_run = ctx.parent.params["dry"]
+    vmwareCleanup(vms=vms, discs=discs, nics=nics, _all=_all, dry_run=is_dry_run)
 
 
 @cleanup_providers.command(help="Cleanup RHEV provider")
