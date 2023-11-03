@@ -1,6 +1,7 @@
 """ec2 CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
+from cloudwash.entities.resources.aws import CleanVMs
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -16,26 +17,10 @@ def cleanup(**kwargs):
         with compute_client("aws", aws_region="us-west-2") as client:
             regions = client.list_regions()
     for region in regions:
-        dry_data['VMS']['stop'] = []
-        dry_data['VMS']['skip'] = []
         for items in data:
             dry_data[items]['delete'] = []
         with compute_client("aws", aws_region=region) as aws_client:
             # Dry Data Collection Defs
-            def dry_vms():
-                all_vms = aws_client.list_vms()
-                for vm in all_vms:
-                    if vm.name in settings.aws.exceptions.vm.vm_list:
-                        dry_data["VMS"]["skip"].append(vm.name)
-                        continue
-                    elif total_running_time(vm).minutes >= settings.aws.criteria.vm.sla_minutes:
-                        if vm.name in settings.aws.exceptions.vm.stop_list:
-                            dry_data["VMS"]["stop"].append(vm.name)
-                            continue
-                        elif vm.name.startswith(settings.aws.criteria.vm.delete_vm):
-                            dry_data["VMS"]["delete"].append(vm.name)
-                return dry_data["VMS"]
-
             def dry_nics():
                 rnics = []
                 if settings.aws.criteria.nic.unassigned:
@@ -97,13 +82,6 @@ def cleanup(**kwargs):
 
                 return rstacks
 
-            # Remove / Stop VMs
-            def remove_vms(avms):
-                # Remove VMs
-                [aws_client.get_vm(vm_name).delete() for vm_name in avms["delete"]]
-                # Stop VMs
-                [aws_client.get_vm(vm_name).stop() for vm_name in avms["stop"]]
-
             # Delete CloudFormations
             def remove_stacks(stacks):
                 [aws_client.get_stack(stack_name).delete() for stack_name in stacks]
@@ -111,12 +89,10 @@ def cleanup(**kwargs):
             # Actual Cleaning and dry execution
             logger.info(f"\nResources from the region: {region}")
             if kwargs["vms"] or kwargs["_all"]:
-                avms = dry_vms()
+                vms_cleanup = CleanVMs(awsclient=aws_client)
                 if not is_dry_run:
-                    remove_vms(avms=avms)
-                    logger.info(f"Stopped VMs: \n{avms['stop']}")
-                    logger.info(f"Removed VMs: \n{avms['delete']}")
-                    logger.info(f"Skipped VMs: \n{avms['skip']}")
+                    vms_cleanup.cleanup()
+
             if kwargs["nics"] or kwargs["_all"]:
                 rnics = dry_nics()
                 if not is_dry_run and rnics:
