@@ -8,9 +8,12 @@ Most importantly, `cloudwash` provides the CLI utility called '`swach`' that can
 
 cloudwash supports following cloud providers:
 
-* Amazon EC2
-* Google Cloud
-* Microsoft Azure
+| Cloud Providers  | vms    | nics    | discs     | images   | pips    | stacks   |
+|------------------|--------|---------|-----------|----------|---------|----------|
+| Amazon EC2       | &check;| &check; | &check;   |  &check; |  &check;|  &check; |
+| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  &cross; |
+| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  &cross; |
+
 * RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
 * VMWare vCenter (_Support yet To be added_)
