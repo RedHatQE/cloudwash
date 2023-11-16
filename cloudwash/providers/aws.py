@@ -8,7 +8,6 @@ from cloudwash.utils import total_running_time
 
 
 def cleanup(**kwargs):
-
     is_dry_run = kwargs["dry_run"]
     data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
     regions = settings.aws.auth.regions
