@@ -19,6 +19,8 @@ cloudwash supports following cloud providers:
 * VMWare vCenter (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
+NOTE: You can use `--all` flag with all the cloud providers to clean all supported resources.
+
 The list of resource types it helps to clean could be found under settings.yaml.template](https://github.com/RedHatQE/cloudwash/blob/master/settings.yaml.template) file for individual cloud providers along with cleanup criteria.
 
 ## Installation
