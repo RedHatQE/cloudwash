@@ -11,8 +11,9 @@ cloudwash supports following cloud providers:
 | Cloud Providers  | vms    | nics    | discs     | images   | pips    | stacks   |
 |------------------|--------|---------|-----------|----------|---------|----------|
 | Amazon EC2       | &check;| &check; | &check;   |  &check; |  &check;|  &check; |
-| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  &cross; |
-| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  &cross; |
+| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  **NA**  |
+| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  **NA**  |
+| VMWare           | &check;| &check; | &check;   |  &cross; |  **NA** |  **NA**  |
 
 * RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
