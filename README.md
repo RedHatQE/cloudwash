@@ -8,13 +8,19 @@ Most importantly, `cloudwash` provides the CLI utility called '`swach`' that can
 
 cloudwash supports following cloud providers:
 
-* Amazon EC2
-* Google Cloud
-* Microsoft Azure
+| Cloud Providers  | vms    | nics    | discs     | images   | pips    | stacks   |
+|------------------|--------|---------|-----------|----------|---------|----------|
+| Amazon EC2       | &check;| &check; | &check;   |  &check; |  &check;|  &check; |
+| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  **NA**  |
+| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  **NA**  |
+| VMWare           | &check;| &check; | &check;   |  &cross; |  **NA** |  **NA**  |
+
 * RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
 * VMWare vCenter (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
+
+NOTE: You can use `--all` flag with all the cloud providers to clean all supported resources.
 
 The list of resource types it helps to clean could be found under settings.yaml.template](https://github.com/RedHatQE/cloudwash/blob/master/settings.yaml.template) file for individual cloud providers along with cleanup criteria.
 
