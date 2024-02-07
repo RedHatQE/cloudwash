@@ -38,7 +38,7 @@ jobs:
           cp settings.yaml.template settings.yaml
 
       - name: Pre Commit Checks
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
       - name: Analysis (git diff)
         if: failure()
