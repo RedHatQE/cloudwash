@@ -1,7 +1,7 @@
 """ec2 CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
-from cloudwash.entities.providers.aws import AWSCleanup
+from cloudwash.entities.providers import AWSCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -21,6 +21,7 @@ def cleanup(**kwargs):
             dry_data[items]['delete'] = []
         with compute_client("aws", aws_region=region) as aws_client:
             awscleanup = AWSCleanup(client=aws_client)
+
             # Dry Data Collection Defs
             def dry_nics():
                 rnics = []
@@ -31,13 +32,6 @@ def cleanup(**kwargs):
                         for dnic in rnics
                     ]
                 return rnics
-
-            def dry_discs():
-                rdiscs = []
-                if settings.aws.criteria.disc.unassigned:
-                    rdiscs = aws_client.get_all_unattached_volumes()
-                    [dry_data["DISCS"]["delete"].append(ddisc["VolumeId"]) for ddisc in rdiscs]
-                return rdiscs
 
             def dry_images():
                 rimages = []
@@ -90,19 +84,14 @@ def cleanup(**kwargs):
             # Actual Cleaning and dry execution
             logger.info(f"\nResources from the region: {region}")
             if kwargs["vms"] or kwargs["_all"]:
-                if not is_dry_run:
-                    awscleanup.vms.cleanup()
-
+                awscleanup.vms.cleanup()
             if kwargs["nics"] or kwargs["_all"]:
                 rnics = dry_nics()
                 if not is_dry_run and rnics:
                     aws_client.remove_all_unused_nics()
                     logger.info(f"Removed NICs: \n{rnics}")
             if kwargs["discs"] or kwargs["_all"]:
-                rdiscs = dry_discs()
-                if not is_dry_run and rdiscs:
-                    aws_client.remove_all_unused_volumes()
-                    logger.info(f"Removed Discs: \n{rdiscs}")
+                awscleanup.discs.cleanup()
             if kwargs["images"] or kwargs["_all"]:
                 rimages = dry_images()
                 if not is_dry_run and rimages:

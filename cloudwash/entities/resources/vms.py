@@ -21,6 +21,30 @@ class CleanVMs(VMsCleanup):
         dry_data['VMS']['skip'] = self._skip
 
     def list(self):
+        pass
+
+    def remove(self):
+        for vm_name in self._delete:
+            self.client.get_vm(vm_name).delete()
+        logger.info(f"Removed VMs: \n{self._delete}")
+
+    def stop(self):
+        for vm_name in self._stop:
+            self.client.get_vm(vm_name).stop()
+        logger.info(f"Stopped VMs: \n{self._stop}")
+
+    def skip(self):
+        logger.info(f"Skipped VMs: \n{self._skip}")
+
+    def cleanup(self):
+        if not settings.dry_run:
+            self.remove()
+            self.stop()
+            self.skip()
+
+
+class CleanAWSVms(CleanVMs):
+    def list(self):
         all_vms = self.client.list_vms()
 
         for vm in all_vms:
@@ -37,20 +61,32 @@ class CleanVMs(VMsCleanup):
                     self._delete.append(vm.name)
         self._set_dry()
 
-    def remove(self):
-        for vm_name in self._delete:
-            self.client.get_vm(vm_name).delete()
-        logger.info(f"Removed VMs: \n{self._delete}")
 
-    def stop(self):
-        for vm_name in self._stop:
-            self.client.get_vm(vm_name).stop()
-        logger.info(f"Stopped VMs: \n{self._stop}")
+class CleanAzureVMs(CleanVMs):
+    def list(self):
+        all_vms = self.client.list_vms()
 
-    def skip(self):
-        logger.info(f"Skipped VMs: \n{self._skip}")
-
-    def cleanup(self):
-        self.remove()
-        self.stop()
-        self.skip()
+        for vm in all_vms:
+            if not vm.exists:
+                self._delete.append(vm.name)
+                continue
+            # Don't assess the VM that is still in creating state
+            if vm.state.lower() == "vmstate.creating":
+                continue
+            # Match the user defined criteria in settings to delete the VM
+            if vm.name in settings.azure.exceptions.vm.vm_list:
+                self._skip.append(vm.name)
+            elif (
+                getattr(
+                    total_running_time(vm),
+                    "minutes",
+                    int(settings.azure.criteria.vm.sla_minutes) + 1,
+                )
+                >= settings.azure.criteria.vm.sla_minutes
+            ):
+                if vm.name in settings.azure.exceptions.vm.stop_list:
+                    self._stop.append(vm.name)
+                    continue
+                elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):
+                    self._delete.append(vm.name)
+        self._set_dry()
