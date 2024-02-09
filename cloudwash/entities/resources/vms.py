@@ -1,13 +1,13 @@
 from cloudwash.config import settings
-from cloudwash.entities.base import VMsCleanup
+from cloudwash.entities.resources.base import VMsCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import total_running_time
 
 
 class CleanVMs(VMsCleanup):
-    def __init__(self, awsclient):
-        self.client = awsclient
+    def __init__(self, client):
+        self.client = client
         self._delete = []
         self._stop = []
         self._skip = []
@@ -25,7 +25,7 @@ class CleanVMs(VMsCleanup):
 
         for vm in all_vms:
             if vm.name in settings.aws.exceptions.vm.vm_list:
-                self._delete.append(vm.name)
+                self._skip.append(vm.name)
                 continue
 
             elif total_running_time(vm).minutes >= settings.aws.criteria.vm.sla_minutes:

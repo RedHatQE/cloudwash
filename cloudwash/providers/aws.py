@@ -1,7 +1,7 @@
 """ec2 CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
-from cloudwash.entities.resources.aws import CleanVMs
+from cloudwash.entities.providers.aws import AWSCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -20,6 +20,7 @@ def cleanup(**kwargs):
         for items in data:
             dry_data[items]['delete'] = []
         with compute_client("aws", aws_region=region) as aws_client:
+            awscleanup = AWSCleanup(client=aws_client)
             # Dry Data Collection Defs
             def dry_nics():
                 rnics = []
@@ -89,9 +90,8 @@ def cleanup(**kwargs):
             # Actual Cleaning and dry execution
             logger.info(f"\nResources from the region: {region}")
             if kwargs["vms"] or kwargs["_all"]:
-                vms_cleanup = CleanVMs(awsclient=aws_client)
                 if not is_dry_run:
-                    vms_cleanup.cleanup()
+                    awscleanup.vms.cleanup()
 
             if kwargs["nics"] or kwargs["_all"]:
                 rnics = dry_nics()
