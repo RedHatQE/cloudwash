@@ -50,8 +50,9 @@ def cleanup_providers(ctx, dry, version):
         click.echo(f"Version: {cloudwash_version}")
         click.echo(f"Settings File: {settings.settings_file}")
     if ctx.invoked_subcommand:
+        settings.set('dry_run', dry)
         logger.info(
-            f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} RUN mode >>>>>>>"
+            f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} mode >>>>>>>"
         )
 
 
