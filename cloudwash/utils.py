@@ -5,8 +5,11 @@ from datetime import datetime
 import pytz
 
 from cloudwash.logger import logger
+
 import dominate
+
 from dominate.tags import * 
+
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 dry_data = {
     "NICS": {"delete": []},
@@ -19,7 +22,6 @@ dry_data = {
 }
 dry_data.update(_vms_dict)
 
-
 def echo_dry(dry_data=None) -> None:
     """Prints and Logs the per resource cleanup data on STDOUT and logfile
 
@@ -27,48 +29,31 @@ def echo_dry(dry_data=None) -> None:
         it follows the format of module scoped `dry_data` variable in this module
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
-    deletable_vms = dry_data["VMS"]["delete"]
-    stopable_vms = dry_data["VMS"]["stop"]
-    skipped_vms = dry_data["VMS"]["skip"]
-    deletable_discs = dry_data["DISCS"]["delete"]
-    deletable_nics = dry_data["NICS"]["delete"]
-    deletable_images = dry_data["IMAGES"]["delete"]
-    deletable_pips = dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None
-    deletable_resources = dry_data["RESOURCES"]["delete"]
-    deletable_stacks = dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
-    if deletable_vms or stopable_vms or skipped_vms:
-        logger.info(
-            f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
-            f"Skip: {skipped_vms}"
-        )
-    if deletable_discs:
-        logger.info(f"DISCs:\n\tDeletable: {deletable_discs}")
-    if deletable_nics:
-        logger.info(f"NICs:\n\tDeletable: {deletable_nics}")
-    if deletable_images:
-        logger.info(f"IMAGES:\n\tDeletable: {deletable_images}")
-    if deletable_pips:
-        logger.info(f"PIPs:\n\tDeletable: {deletable_pips}")
-    if deletable_resources:
-        logger.info(f"RESOURCEs:\n\tDeletable: {deletable_resources}")
-    if deletable_stacks:
-        logger.info(f"STACKs:\n\tDeletable: {deletable_stacks}")
-    if not any(
-        [
-            deletable_vms,
-            stopable_vms,
-            deletable_discs,
-            deletable_nics,
-            deletable_pips,
-            deletable_resources,
-            deletable_stacks,
-            deletable_images,
-        ]
-    ):
-        logger.info("\nNo resources are eligible for cleanup!")
-    logger.info("\n====================================\n")
-    create_html(provider=dry_data.get('PROVIDER'),deletable_vms=deletable_vms,stopable_vms=stopable_vms,skipped_vms=skipped_vms,deletable_discs=deletable_discs,deletable_nics=deletable_nics,deletable_pips=deletable_pips,deletable_resources=deletable_resources,deletable_stacks=deletable_stacks,deletable_images=deletable_images)
 
+    resource_data = {
+        "provider": dry_data.get('PROVIDER'),
+        "deletable_vms": dry_data["VMS"]["delete"],
+        "stopable_vms": dry_data["VMS"]["stop"],
+        "skipped_vms": dry_data["VMS"]["skip"],
+        "deletable_discs": dry_data["DISCS"]["delete"],
+        "deletable_nics": dry_data["NICS"]["delete"],
+        "deletable_images": dry_data["IMAGES"]["delete"],
+        "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
+        "deletable_resources": dry_data["RESOURCES"]["delete"],
+        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
+    }
+    if any(value for key, value in resource_data.items() if key != 'provider'):
+        logger.info("Resources eligible for cleanup:")
+        for key, value in resource_data.items():
+            if value and key!="provider":
+                logger.info(f"{key.replace('_', ' ').title()}:\n\t{key.split('_')[0].title()}: {value}")
+
+        logger.info("\n====================================\n")
+
+        create_html(**resource_data)
+    else:
+        logger.info("\nNo resources are eligible for cleanup!\n")
+    
 def create_html(**kwargs):
     doc = dominate.document(title="Cloud resources page")
     doc = add_css_style(doc=doc)
@@ -84,15 +69,15 @@ def create_html(**kwargs):
                 with tbody():
                     for key,values in kwargs.items():
                         if key!="provider" and values:
-                            with td():
                                 if isinstance(values,list):
-                                    with ul():
-                                        [li(resource_name) for resource_name in values]
+                                    with td():
+                                        with ul():
+                                            [li(resource_name) for resource_name in values]
                                 else:
                                     td(values)
-    with open('index.html','a') as file:
+    with open('cleanup_resource.html','w') as file:
             file.write(doc.render())
-            
+
 def add_css_style(doc):
     with doc.head:
         style('''
@@ -129,7 +114,7 @@ def add_css_style(doc):
 
             #cloud_table tbody tr {
                 border-bottom: 1px solid #dddddd;
-                color: #009999;
+                color: #488b8b;
                 font-weight: bold;
             }
 
