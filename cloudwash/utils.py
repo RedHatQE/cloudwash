@@ -5,7 +5,8 @@ from datetime import datetime
 import pytz
 
 from cloudwash.logger import logger
-
+import dominate
+from dominate.tags import * 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 dry_data = {
     "NICS": {"delete": []},
@@ -14,6 +15,7 @@ dry_data = {
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
+    "PROVIDER": ""
 }
 dry_data.update(_vms_dict)
 
@@ -65,7 +67,63 @@ def echo_dry(dry_data=None) -> None:
     ):
         logger.info("\nNo resources are eligible for cleanup!")
     logger.info("\n====================================\n")
+    create_html(provider=dry_data.get('PROVIDER'),deletable_vms=deletable_vms,stopable_vms=stopable_vms,skipped_vms=skipped_vms,deletable_discs=deletable_discs,deletable_nics=deletable_nics,deletable_pips=deletable_pips,deletable_resources=deletable_resources,deletable_stacks=deletable_stacks,deletable_images=deletable_images)
 
+def create_html(**kwargs):
+    doc = dominate.document(title="Cloud resources page")
+    import pdb; 
+    table_headers = ["Deletable VMs","Stoppable VMs","Skipped VMs","Deletable Discs","Deletable NICs","Deletable PIPs","Deletable Resources", "Deletable Stacks","Deletable Images"]
+    with doc.head:
+            style('''
+            table,th,td{border: 0.1px solid black;border-collapse: collapse;margin-left: 4px;}
+                #cloud_table {
+                border-collapse: collapse;
+                margin: 25px 0;
+                font-size: 0.9em;
+                font-family: sans-serif;
+                min-width: 400px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                }
+                #cloud_table thead tr {
+                background-color: #009879;
+                color: #ffffff;
+                text-align: left;
+                }
+                #cloud_table th,td{
+                    padding: 12px 15px;
+                }
+                #cloud_table tbody tr {
+                    border-bottom: 1px solid #dddddd;
+                }
+                #cloud_table tbody tr:nth-of-type(even) {
+                    background-color: #f3f3f3;
+                }
+            ''')
+            with div(cls='cloud_box'):
+                with table(id='cloud_table'):
+                    pdb.set_trace()
+                    caption(h3(f"{kwargs.get('provider')} RESOURCES"))
+                    with thead():
+                        with tr():
+                            for table_head in table_headers:
+                                th(table_head)
+                    with tbody():
+                        with td():
+                            if kwargs.get("deletable_vms",[]):
+                                with ul():
+                                    [li(vm) for vm in kwargs.get("deletable_vms")]
+                            else:
+                                "-"
+                        td(kwargs.get("stopable_vms"),"-")
+                        td(kwargs.get("deletable_discs"))
+                        td(kwargs.get("deletable_nics"))
+                        td(kwargs.get("deletable_pips"))
+                        td(kwargs.get("deletable_resources"))
+                        td(kwargs.get("deletable_stacks"))
+                        td(kwargs.get("deletable_images"))
+
+    with open('index.html','a') as file:
+            file.write(doc.render())
 
 def total_running_time(vm_obj) -> namedtuple:
     """Calculates the VMs total running time
