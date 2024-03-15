@@ -71,59 +71,92 @@ def echo_dry(dry_data=None) -> None:
 
 def create_html(**kwargs):
     doc = dominate.document(title="Cloud resources page")
-    import pdb; 
-    table_headers = ["Deletable VMs","Stoppable VMs","Skipped VMs","Deletable Discs","Deletable NICs","Deletable PIPs","Deletable Resources", "Deletable Stacks","Deletable Images"]
-    with doc.head:
-            style('''
-            table,th,td{border: 0.1px solid black;border-collapse: collapse;margin-left: 4px;}
-                #cloud_table {
-                border-collapse: collapse;
-                margin: 25px 0;
-                font-size: 0.9em;
-                font-family: sans-serif;
-                min-width: 400px;
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-                }
-                #cloud_table thead tr {
-                background-color: #009879;
-                color: #ffffff;
-                text-align: left;
-                }
-                #cloud_table th,td{
-                    padding: 12px 15px;
-                }
-                #cloud_table tbody tr {
-                    border-bottom: 1px solid #dddddd;
-                }
-                #cloud_table tbody tr:nth-of-type(even) {
-                    background-color: #f3f3f3;
-                }
-            ''')
-            with div(cls='cloud_box'):
-                with table(id='cloud_table'):
-                    pdb.set_trace()
-                    caption(h3(f"{kwargs.get('provider')} RESOURCES"))
-                    with thead():
-                        with tr():
-                            for table_head in table_headers:
-                                th(table_head)
-                    with tbody():
-                        with td():
-                            if kwargs.get("deletable_vms",[]):
-                                with ul():
-                                    [li(vm) for vm in kwargs.get("deletable_vms")]
-                            else:
-                                "-"
-                        td(kwargs.get("stopable_vms"),"-")
-                        td(kwargs.get("deletable_discs"))
-                        td(kwargs.get("deletable_nics"))
-                        td(kwargs.get("deletable_pips"))
-                        td(kwargs.get("deletable_resources"))
-                        td(kwargs.get("deletable_stacks"))
-                        td(kwargs.get("deletable_images"))
-
+    doc = add_css_style(doc=doc)
+    with doc:
+        with div(cls='cloud_box'):
+            with table(id='cloud_table'):
+                caption(h3(f"{kwargs.get('provider')} RESOURCES"))
+                with thead():
+                    with tr():
+                        for table_head in kwargs.keys():
+                            if kwargs[table_head] and table_head!="provider":
+                                th(table_head.replace("_"," ").title())
+                with tbody():
+                    for key,values in kwargs.items():
+                        if key!="provider" and values:
+                            with td():
+                                if isinstance(values,list):
+                                    with ul():
+                                        [li(resource_name) for resource_name in values]
+                                else:
+                                    td(values)
     with open('index.html','a') as file:
             file.write(doc.render())
+            
+def add_css_style(doc):
+    with doc.head:
+        style('''
+            table, th, td {
+                border-collapse: collapse;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            #cloud_table {
+                border-collapse: collapse;
+                margin: 25px auto;
+                font: 0.9em sans-serif;
+                min-width: 800px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                border-radius: 5px 5px 0 0;
+                overflow: hidden;
+            }
+
+            #cloud_table thead tr {
+                background-color: #009879;
+                color: #ffffff;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            #cloud_table th, #cloud_table td {
+                padding: 12px 15px;
+            }
+
+            #cloud_table th:not(:last-child), #cloud_table td:not(:last-child) {
+                border-right: 0.1px solid black;
+            }
+
+            #cloud_table tbody tr {
+                border-bottom: 1px solid #dddddd;
+                color: #009999;
+                font-weight: bold;
+            }
+
+            #cloud_table tbody tr:nth-of-type(odd) {
+                background-color: #f3f3f3;
+            }
+
+            #cloud_table tbody tr:last-of-type {
+                border-bottom: 2px solid #009879;
+            }
+
+            #cloud_table tbody td {
+                text-align: left;
+            }
+
+            ul {
+                margin: 0;
+                padding: 0 0 0 20px;
+                list-style-type: circle;
+            }
+
+            ul li {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+        ''')
+    return doc
 
 def total_running_time(vm_obj) -> namedtuple:
     """Calculates the VMs total running time
