@@ -1,0 +1,30 @@
+# Catalog entry for Backstage [backstage.io]
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: cloudwash
+  title: Cloudwash
+  description: The cloud resources cleanup utility tool
+  links:
+    - title: pypi
+      url: https://pypi.org/project/cloudwash
+    - title: code
+      url: https://github.com/RedHatQE/cloudwash
+      icon: github
+  tags:
+    - python
+    - cloud
+    - cleanup
+    - click
+    - infrastructure
+    - jenkins
+    - podman
+    - docker
+  namespace: quality-community
+  annotations:
+    github.com/project-slug: RedHatQE/cloudwash
+    feedback/email-to: 'jyejare@redhat.com'
+spec:
+  owner: group:redhat/satellite-qe
+  lifecycle: production
+  domain: quality-community/quality-community
