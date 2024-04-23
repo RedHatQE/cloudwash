@@ -41,7 +41,7 @@ class CleanAWSDiscs(CleanDiscs):
 
 class CleanAzureDiscs(CleanDiscs):
     def list(self):
-        if settings.aws.criteria.disc.unassigned:
+        if settings.azure.criteria.disc.unassigned:
             rdiscs = self.client.list_free_discs()
             self._delete.extend(rdiscs)
         self._set_dry()
