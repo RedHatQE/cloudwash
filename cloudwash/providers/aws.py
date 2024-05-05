@@ -1,17 +1,15 @@
 """ec2 CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
+from cloudwash.constants import aws_data as data
 from cloudwash.entities.providers import AWSCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
-from cloudwash.utils import total_running_time
 
 
 def cleanup(**kwargs):
-
-    is_dry_run = kwargs["dry_run"]
-    data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
+    is_dry_run = kwargs.get("dry_run", False)
     regions = settings.aws.auth.regions
     if "all" in regions:
         with compute_client("aws", aws_region="us-west-2") as client:
@@ -21,92 +19,19 @@ def cleanup(**kwargs):
             dry_data[items]['delete'] = []
         with compute_client("aws", aws_region=region) as aws_client:
             awscleanup = AWSCleanup(client=aws_client)
-
-            # Dry Data Collection Defs
-            def dry_nics():
-                rnics = []
-                if settings.aws.criteria.nic.unassigned:
-                    rnics = aws_client.get_all_unused_network_interfaces()
-                    [
-                        dry_data["NICS"]["delete"].append(dnic["NetworkInterfaceId"])
-                        for dnic in rnics
-                    ]
-                return rnics
-
-            def dry_images():
-                rimages = []
-                if settings.aws.criteria.image.unassigned:
-                    rimages = aws_client.list_templates(executable_by_me=False, owned_by_me=True)
-                    free_images = aws_client.list_free_images(
-                        image_list=[image.raw.image_id for image in rimages]
-                    )
-                    remove_images = [
-                        image
-                        for image in free_images
-                        if image not in settings.aws.exceptions.images
-                    ]
-                    if settings.aws.criteria.image.delete_image:
-                        remove_images = [
-                            image
-                            for image in remove_images
-                            if image.startswith(settings.aws.criteria.image.delete_image)
-                        ]
-                    dry_data["IMAGES"]["delete"].extend(remove_images)
-                return remove_images
-
-            def dry_pips():
-                rpips = []
-                if settings.aws.criteria.public_ip.unassigned:
-                    rpips = aws_client.get_all_disassociated_addresses()
-                    [dry_data["PIPS"]["delete"].append(dpip["AllocationId"]) for dpip in rpips]
-                return rpips
-
-            def dry_stacks():
-                rstacks = []
-                [
-                    rstacks.append(stack.name)
-                    for stack in aws_client.list_stacks()
-                    if (
-                        total_running_time(stack).minutes
-                        >= settings.aws.criteria.stacks.sla_minutes
-                        and stack.name.startswith(settings.aws.criteria.stacks.delete_stack)
-                    )
-                    and stack.name not in settings.aws.exceptions.stacks.stack_list
-                ]
-                [dry_data['STACKS']['delete'].append(stack) for stack in rstacks]
-
-                return rstacks
-
-            # Delete CloudFormations
-            def remove_stacks(stacks):
-                [aws_client.get_stack(stack_name).delete() for stack_name in stacks]
-
             # Actual Cleaning and dry execution
             logger.info(f"\nResources from the region: {region}")
             if kwargs["vms"] or kwargs["_all"]:
                 awscleanup.vms.cleanup()
             if kwargs["nics"] or kwargs["_all"]:
-                rnics = dry_nics()
-                if not is_dry_run and rnics:
-                    aws_client.remove_all_unused_nics()
-                    logger.info(f"Removed NICs: \n{rnics}")
+                awscleanup.nics.cleanup()
             if kwargs["discs"] or kwargs["_all"]:
                 awscleanup.discs.cleanup()
-            if kwargs["images"] or kwargs["_all"]:
-                rimages = dry_images()
-                if not is_dry_run and rimages:
-                    aws_client.delete_images(image_list=rimages)
-                    logger.info(f"Removed Images: \n{rimages}")
-
             if kwargs["pips"] or kwargs["_all"]:
-                rpips = dry_pips()
-                if not is_dry_run and rpips:
-                    aws_client.remove_all_unused_ips()
-                    logger.info(f"Removed PIPs: \n{rpips}")
+                awscleanup.pips.cleanup()
+            if kwargs["images"] or kwargs["_all"]:
+                awscleanup.images.cleanup()
             if kwargs["stacks"] or kwargs["_all"]:
-                rstacks = dry_stacks()
-                if not is_dry_run:
-                    remove_stacks(stacks=rstacks)
-                    logger.info(f"Removed Stacks: \n{rstacks}")
+                awscleanup.stacks.cleanup()
             if is_dry_run:
                 echo_dry(dry_data)
