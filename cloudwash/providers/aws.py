@@ -2,14 +2,19 @@
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.logger import logger
+from cloudwash.utils import delete_ocp
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
+from cloudwash.utils import filter_resources_by_time_modified
+from cloudwash.utils import group_ocps_by_cluster
+from cloudwash.utils import OCP_TAG_SUBSTR
 from cloudwash.utils import total_running_time
 
 
 def cleanup(**kwargs):
+    client_region = settings.aws.auth.client_region
     is_dry_run = kwargs["dry_run"]
-    data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
+    data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS', 'OCPS']
     regions = settings.aws.auth.regions
     if "all" in regions:
         with compute_client("aws", aws_region="us-west-2") as client:
@@ -19,7 +24,10 @@ def cleanup(**kwargs):
         dry_data['VMS']['skip'] = []
         for items in data:
             dry_data[items]['delete'] = []
-        with compute_client("aws", aws_region=region) as aws_client:
+
+        # Differentiate between the cleanup region to the client region, if client_region defined
+        r = client_region or region
+        with compute_client("aws", aws_region=r) as aws_client:
             # Dry Data Collection Defs
             def dry_vms():
                 all_vms = aws_client.list_vms()
@@ -96,6 +104,40 @@ def cleanup(**kwargs):
 
                 return rstacks
 
+            def dry_ocps():
+                time_ref = settings.aws.criteria.ocps.sla or "7d"
+                resources = []
+
+                if region:
+                    query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{region}"])
+                    resources = aws_client.list_resources(query=query)
+
+                # Prepare resources to be filtered before deletion
+                cluster_map = group_ocps_by_cluster(resources=resources)
+                for cluster_name in cluster_map.keys():
+                    cluster_resources = cluster_map[cluster_name].get("Resources")
+                    instances = cluster_map[cluster_name].get("Instances")
+
+                    if instances:
+                        # For resources with associated EC2 Instances, filter by Instances SLA
+                        if not filter_resources_by_time_modified(
+                            resources=instances, time_ref=time_ref
+                        ):
+                            dry_data["OCPS"]["delete"].extend(cluster_resources)
+                    else:
+                        # For resources with no associated EC2 Instances, identify as leftovers
+                        dry_data["OCPS"]["delete"].extend(
+                            filter_resources_by_time_modified(
+                                resources=cluster_resources, time_ref=time_ref
+                            )
+                        )
+
+                # Sort resources by type
+                dry_data["OCPS"]["delete"] = sorted(
+                    dry_data["OCPS"]["delete"], key=lambda x: x.resource_type
+                )
+                return dry_data["OCPS"]["delete"]
+
             # Remove / Stop VMs
             def remove_vms(avms):
                 # Remove VMs
@@ -142,5 +184,10 @@ def cleanup(**kwargs):
                 if not is_dry_run:
                     remove_stacks(stacks=rstacks)
                     logger.info(f"Removed Stacks: \n{rstacks}")
+            if kwargs["ocps"] or kwargs["_all"]:
+                rocps = dry_ocps()
+                if not is_dry_run:
+                    for ocp in rocps:
+                        delete_ocp(ocp)
             if is_dry_run:
                 echo_dry(dry_data)
