@@ -100,7 +100,7 @@ AWS:
             SLA_MINUTES: 120
         OCPS:
             # Specified as {time_value}{time_unit} format, e.g. "7d" = 7 Days
-            SLA:
+            SLA: 7d
     EXCEPTIONS:
         VM:
             # VM names that would be skipped from cleanup

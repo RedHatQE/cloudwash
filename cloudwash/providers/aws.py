@@ -105,7 +105,7 @@ def cleanup(**kwargs):
                 return rstacks
 
             def dry_ocps():
-                time_ref = settings.aws.criteria.ocps.sla or "7d"
+                time_ref = settings.aws.criteria.ocps.sla
                 resources = []
 
                 if region:
