@@ -166,6 +166,8 @@ def filter_resources_by_time_modified(
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
     filtered_resources = []
+    if time_ref is None:
+        time_ref = ""
 
     if time_ref.isnumeric():
         # Use default time value as Minutes
