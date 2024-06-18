@@ -101,7 +101,7 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Build and push image to Quay
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.dev
