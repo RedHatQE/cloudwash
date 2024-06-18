@@ -38,7 +38,7 @@ jobs:
           cp settings.yaml.template settings.yaml
 
       - name: Pre Commit Checks
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
       - name: Analysis (git diff)
         if: failure()
@@ -72,7 +72,7 @@ jobs:
           python -m twine check dist/*
 
       - name: Release to PyPi
-        uses: pypa/gh-action-pypi-publish@v1.8.11
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
