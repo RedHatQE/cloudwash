@@ -108,9 +108,8 @@ def cleanup(**kwargs):
                 time_ref = settings.aws.criteria.ocps.sla
                 resources = []
 
-                if region:
-                    query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{region}"])
-                    resources = aws_client.list_resources(query=query)
+                query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{region}"])
+                resources = aws_client.list_resources(query=query)
 
                 # Prepare resources to be filtered before deletion
                 cluster_map = group_ocps_by_cluster(resources=resources)

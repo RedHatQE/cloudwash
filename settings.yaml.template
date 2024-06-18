@@ -100,6 +100,7 @@ AWS:
             SLA_MINUTES: 120
         OCPS:
             # Specified as {time_value}{time_unit} format, e.g. "7d" = 7 Days
+            # If a time unit is not specified (the value is numeric), it will be considered as Minutes
             SLA: 7d
     EXCEPTIONS:
         VM:
