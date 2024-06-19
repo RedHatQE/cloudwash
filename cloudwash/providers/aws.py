@@ -23,7 +23,6 @@ def cleanup(**kwargs):
         dry_data['VMS']['skip'] = []
         for items in data:
             dry_data[items]['delete'] = []
-
         with compute_client("aws", aws_region=region) as aws_client:
             # Dry Data Collection Defs
             def dry_vms():
@@ -180,7 +179,7 @@ def cleanup(**kwargs):
                     remove_stacks(stacks=rstacks)
                     logger.info(f"Removed Stacks: \n{rstacks}")
             if kwargs["ocps"] or kwargs["_all"]:
-                # Differentiate between the cleanup region to the Resource Explorer client region
+                # Differentiate between the cleanup region and the Resource Explorer client region
                 ocp_client_region = settings.aws.criteria.ocps.ocp_client_region
                 with compute_client(
                     "aws", aws_region=ocp_client_region
