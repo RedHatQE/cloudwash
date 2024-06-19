@@ -12,7 +12,6 @@ from cloudwash.utils import total_running_time
 
 
 def cleanup(**kwargs):
-    client_region = settings.aws.auth.client_region
     is_dry_run = kwargs["dry_run"]
     data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS', 'OCPS']
     regions = settings.aws.auth.regions
@@ -25,9 +24,7 @@ def cleanup(**kwargs):
         for items in data:
             dry_data[items]['delete'] = []
 
-        # Differentiate between the cleanup region to the client region, if client_region defined
-        r = client_region or region
-        with compute_client("aws", aws_region=r) as aws_client:
+        with compute_client("aws", aws_region=region) as aws_client:
             # Dry Data Collection Defs
             def dry_vms():
                 all_vms = aws_client.list_vms()
@@ -106,10 +103,9 @@ def cleanup(**kwargs):
 
             def dry_ocps():
                 time_ref = settings.aws.criteria.ocps.sla
-                resources = []
 
                 query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{region}"])
-                resources = aws_client.list_resources(query=query)
+                resources = resource_explorer_client.list_resources(query=query)
 
                 # Prepare resources to be filtered before deletion
                 cluster_map = group_ocps_by_cluster(resources=resources)
@@ -184,9 +180,12 @@ def cleanup(**kwargs):
                     remove_stacks(stacks=rstacks)
                     logger.info(f"Removed Stacks: \n{rstacks}")
             if kwargs["ocps"] or kwargs["_all"]:
-                rocps = dry_ocps()
-                if not is_dry_run:
-                    for ocp in rocps:
-                        delete_ocp(ocp)
+                # Differentiate between the cleanup region to the Resource Explorer client region
+                ocp_client_region = settings.aws.criteria.ocps.ocp_client_region
+                with compute_client("aws", aws_region=ocp_client_region) as resource_explorer_client:
+                    rocps = dry_ocps()
+                    if not is_dry_run:
+                        for ocp in rocps:
+                            delete_ocp(ocp)
             if is_dry_run:
                 echo_dry(dry_data)
