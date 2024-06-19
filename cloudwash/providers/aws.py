@@ -182,7 +182,9 @@ def cleanup(**kwargs):
             if kwargs["ocps"] or kwargs["_all"]:
                 # Differentiate between the cleanup region to the Resource Explorer client region
                 ocp_client_region = settings.aws.criteria.ocps.ocp_client_region
-                with compute_client("aws", aws_region=ocp_client_region) as resource_explorer_client:
+                with compute_client(
+                    "aws", aws_region=ocp_client_region
+                ) as resource_explorer_client:
                     rocps = dry_ocps()
                     if not is_dry_run:
                         for ocp in rocps:

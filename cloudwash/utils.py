@@ -129,7 +129,14 @@ def gce_zones() -> list:
     return zones
 
 
-def group_ocps_by_cluster(resources=None) -> dict:
+def group_ocps_by_cluster(resources: list = None) -> dict:
+    """Group different types of AWS resources under their original OCP clusters
+
+    :param list resources: AWS resources collected by defined region and sla
+    :return: A dictionary with the clusters as keys and the associated resources as values
+    """
+    if resources is None:
+        resources = []
     clusters_map = {}
 
     for resource in resources:
