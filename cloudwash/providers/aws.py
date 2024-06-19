@@ -123,7 +123,9 @@ def cleanup(**kwargs):
                     else:
                         # For resources with no associated EC2 Instances, identify as leftovers
                         dry_data["OCPS"]["delete"].extend(
-                            filter_resources_by_time_modified(time_threshold, resources=cluster_resources)
+                            filter_resources_by_time_modified(
+                                time_threshold, resources=cluster_resources
+                            )
                         )
 
                 # Sort resources by type
