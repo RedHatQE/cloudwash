@@ -2,6 +2,7 @@
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.logger import logger
+from cloudwash.utils import calculate_time_threshold
 from cloudwash.utils import delete_ocp
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
@@ -101,7 +102,7 @@ def cleanup(**kwargs):
                 return rstacks
 
             def dry_ocps():
-                time_ref = settings.aws.criteria.ocps.sla
+                time_threshold = calculate_time_threshold(time_ref=settings.aws.criteria.ocps.sla)
 
                 query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{region}"])
                 resources = resource_explorer_client.list_resources(query=query)
@@ -115,15 +116,14 @@ def cleanup(**kwargs):
                     if instances:
                         # For resources with associated EC2 Instances, filter by Instances SLA
                         if not filter_resources_by_time_modified(
-                            resources=instances, time_ref=time_ref
+                            time_threshold,
+                            resources=instances,
                         ):
                             dry_data["OCPS"]["delete"].extend(cluster_resources)
                     else:
                         # For resources with no associated EC2 Instances, identify as leftovers
                         dry_data["OCPS"]["delete"].extend(
-                            filter_resources_by_time_modified(
-                                resources=cluster_resources, time_ref=time_ref
-                            )
+                            filter_resources_by_time_modified(time_threshold, resources=cluster_resources)
                         )
 
                 # Sort resources by type

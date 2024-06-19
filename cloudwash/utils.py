@@ -156,23 +156,13 @@ def group_ocps_by_cluster(resources: list = None) -> dict:
     return clusters_map
 
 
-def filter_resources_by_time_modified(
-    resources: list[ResourceExplorerResource] = None, time_ref=""
-) -> list:
-    """
-    Filter list of AWS resources by checking modification date ("LastReportedAt")
+def calculate_time_threshold(time_ref=""):
+    """Parses a time reference for data filtering
 
-    :param list resources: List of resources to be filtered out
     :param str time_ref: a relative time reference for indicating the filter value
-        of a relative time, given in a {time_value}{time_unit} format; default is "" (no filtering)
-
-
-    :return: list of resources that last modified before time threshold
-
-    :Example:
-        Use the time_ref "1h" to collect resources that exist for more than an hour
+    of a relative time, given in a {time_value}{time_unit} format; default is "" (no filtering)
+    :return datetime time_threshold
     """
-    filtered_resources = []
     if time_ref is None:
         time_ref = ""
 
@@ -182,6 +172,28 @@ def filter_resources_by_time_modified(
 
     # Time Ref is Optional; if empty, time_threshold will be set as "now"
     time_threshold = dateparser.parse(f"now-{time_ref}-UTC")
+    logger.info(
+        f"\nAssociated OCP resources are filtered by last creation time of: {time_threshold}"
+    )
+    return time_threshold
+
+
+def filter_resources_by_time_modified(
+    time_threshold,
+    resources: list[ResourceExplorerResource] = None,
+) -> list:
+    """
+    Filter list of AWS resources by checking modification date ("LastReportedAt")
+    :param datetime time_threshold: Time filtering criteria
+    :param list resources: List of resources to be filtered out
+
+
+    :return: list of resources that last modified before time threshold
+
+    :Example:
+        Use the time_ref "1h" to collect resources that exist for more than an hour
+    """
+    filtered_resources = []
 
     for resource in resources:
         # Will not collect resources recorded during the SLA time
