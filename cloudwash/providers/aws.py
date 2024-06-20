@@ -120,22 +120,19 @@ def cleanup(**kwargs):
                             resources=instances,
                         ):
                             dry_data["OCPS"]["delete"].extend(cluster_resources)
-                            dry_data["OCPS"]["clusters"].extend([cluster_name])
                     else:
                         # For resources with no associated EC2 Instances, identify as leftovers
-                        filtered_leftovers = filter_resources_by_time_modified(
-                            time_threshold, resources=cluster_resources
+                        dry_data["OCPS"]["delete"].extend(
+                            filter_resources_by_time_modified(
+                                time_threshold, resources=cluster_resources
+                            )
                         )
-                        if filtered_leftovers:
-                            dry_data["OCPS"]["delete"].extend(filtered_leftovers)
-                            # Print cluster_name only if it's resources are deletable
-                            dry_data["OCPS"]["clusters"].extend([cluster_name])
 
                 # Sort resources by type
                 dry_data["OCPS"]["delete"] = sorted(
                     dry_data["OCPS"]["delete"], key=lambda x: x.resource_type
                 )
-                return dry_data["OCPS"]
+                return dry_data["OCPS"]["delete"]
 
             # Remove / Stop VMs
             def remove_vms(avms):
@@ -186,8 +183,6 @@ def cleanup(**kwargs):
             if kwargs["ocps"] or kwargs["_all"]:
                 # Differentiate between the cleanup region and the Resource Explorer client region
                 ocp_client_region = settings.aws.criteria.ocps.ocp_client_region
-                dry_data["OCPS"]["clusters"] = []
-
                 with compute_client(
                     "aws", aws_region=ocp_client_region
                 ) as resource_explorer_client:
