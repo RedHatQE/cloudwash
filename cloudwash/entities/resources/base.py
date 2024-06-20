@@ -16,6 +16,96 @@ class ResourceCleanup(ABC):
         pass
 
 
+class DiscsCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
+class ImagesCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
+class NicsCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
+class PipsCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
+class StacksCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
 class VMsCleanup(ResourceCleanup):
     @abstractmethod
     def list(self):
@@ -35,24 +125,6 @@ class VMsCleanup(ResourceCleanup):
 
     @abstractmethod
     def skip(self):
-        pass
-
-    @abstractmethod
-    def _set_dry(self):
-        pass
-
-
-class DiscsCleanup(ResourceCleanup):
-    @abstractmethod
-    def list(self):
-        pass
-
-    @abstractmethod
-    def cleanup(self):
-        pass
-
-    @abstractmethod
-    def remove(self):
         pass
 
     @abstractmethod
