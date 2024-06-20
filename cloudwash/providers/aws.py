@@ -11,6 +11,7 @@ def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
     data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS']
     regions = settings.aws.auth.regions
+    dry_data['PROVIDER'] = "AWS"
     if "all" in regions:
         with compute_client("aws", aws_region="us-west-2") as client:
             regions = client.list_regions()

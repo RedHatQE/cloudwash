@@ -6,6 +6,10 @@ import pytz
 
 from cloudwash.logger import logger
 
+import dominate
+
+from dominate.tags import * 
+
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 dry_data = {
     "NICS": {"delete": []},
@@ -14,9 +18,9 @@ dry_data = {
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
+    "PROVIDER": ""
 }
 dry_data.update(_vms_dict)
-
 
 def echo_dry(dry_data=None) -> None:
     """Prints and Logs the per resource cleanup data on STDOUT and logfile
@@ -25,47 +29,119 @@ def echo_dry(dry_data=None) -> None:
         it follows the format of module scoped `dry_data` variable in this module
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
-    deletable_vms = dry_data["VMS"]["delete"]
-    stopable_vms = dry_data["VMS"]["stop"]
-    skipped_vms = dry_data["VMS"]["skip"]
-    deletable_discs = dry_data["DISCS"]["delete"]
-    deletable_nics = dry_data["NICS"]["delete"]
-    deletable_images = dry_data["IMAGES"]["delete"]
-    deletable_pips = dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None
-    deletable_resources = dry_data["RESOURCES"]["delete"]
-    deletable_stacks = dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
-    if deletable_vms or stopable_vms or skipped_vms:
-        logger.info(
-            f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
-            f"Skip: {skipped_vms}"
-        )
-    if deletable_discs:
-        logger.info(f"DISCs:\n\tDeletable: {deletable_discs}")
-    if deletable_nics:
-        logger.info(f"NICs:\n\tDeletable: {deletable_nics}")
-    if deletable_images:
-        logger.info(f"IMAGES:\n\tDeletable: {deletable_images}")
-    if deletable_pips:
-        logger.info(f"PIPs:\n\tDeletable: {deletable_pips}")
-    if deletable_resources:
-        logger.info(f"RESOURCEs:\n\tDeletable: {deletable_resources}")
-    if deletable_stacks:
-        logger.info(f"STACKs:\n\tDeletable: {deletable_stacks}")
-    if not any(
-        [
-            deletable_vms,
-            stopable_vms,
-            deletable_discs,
-            deletable_nics,
-            deletable_pips,
-            deletable_resources,
-            deletable_stacks,
-            deletable_images,
-        ]
-    ):
-        logger.info("\nNo resources are eligible for cleanup!")
-    logger.info("\n====================================\n")
 
+    resource_data = {
+        "provider": dry_data.get('PROVIDER'),
+        "deletable_vms": dry_data["VMS"]["delete"],
+        "stopable_vms": dry_data["VMS"]["stop"],
+        "skipped_vms": dry_data["VMS"]["skip"],
+        "deletable_discs": dry_data["DISCS"]["delete"],
+        "deletable_nics": dry_data["NICS"]["delete"],
+        "deletable_images": dry_data["IMAGES"]["delete"],
+        "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
+        "deletable_resources": dry_data["RESOURCES"]["delete"],
+        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
+    }
+    if any(value for key, value in resource_data.items() if key != 'provider'):
+        logger.info("Resources eligible for cleanup:")
+        for key, value in resource_data.items():
+            if value and key!="provider":
+                logger.info(f"{key.replace('_', ' ').title()}:\n\t{key.split('_')[0].title()}: {value}")
+
+        logger.info("\n====================================\n")
+
+        create_html(**resource_data)
+    else:
+        logger.info("\nNo resources are eligible for cleanup!\n")
+    
+def create_html(**kwargs):
+    doc = dominate.document(title="Cloud resources page")
+    doc = add_css_style(doc=doc)
+    with doc:
+        with div(cls='cloud_box'):
+            with table(id='cloud_table'):
+                caption(h3(f"{kwargs.get('provider')} RESOURCES"))
+                with thead():
+                    with tr():
+                        for table_head in kwargs.keys():
+                            if kwargs[table_head] and table_head!="provider":
+                                th(table_head.replace("_"," ").title())
+                with tbody():
+                    for key,values in kwargs.items():
+                        if key!="provider" and values:
+                                if isinstance(values,list):
+                                    with td():
+                                        with ul():
+                                            [li(resource_name) for resource_name in values]
+                                else:
+                                    td(values)
+    with open('cleanup_resource.html','w') as file:
+            file.write(doc.render())
+
+def add_css_style(doc):
+    with doc.head:
+        style('''
+            table, th, td {
+                border-collapse: collapse;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            #cloud_table {
+                border-collapse: collapse;
+                margin: 25px auto;
+                font: 0.9em sans-serif;
+                min-width: 800px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                border-radius: 5px 5px 0 0;
+                overflow: hidden;
+            }
+
+            #cloud_table thead tr {
+                background-color: #009879;
+                color: #ffffff;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            #cloud_table th, #cloud_table td {
+                padding: 12px 15px;
+            }
+
+            #cloud_table th:not(:last-child), #cloud_table td:not(:last-child) {
+                border-right: 0.1px solid black;
+            }
+
+            #cloud_table tbody tr {
+                border-bottom: 1px solid #dddddd;
+                color: #488b8b;
+                font-weight: bold;
+            }
+
+            #cloud_table tbody tr:nth-of-type(odd) {
+                background-color: #f3f3f3;
+            }
+
+            #cloud_table tbody tr:last-of-type {
+                border-bottom: 2px solid #009879;
+            }
+
+            #cloud_table tbody td {
+                text-align: left;
+            }
+
+            ul {
+                margin: 0;
+                padding: 0 0 0 20px;
+                list-style-type: circle;
+            }
+
+            ul li {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+        ''')
+    return doc
 
 def total_running_time(vm_obj) -> namedtuple:
     """Calculates the VMs total running time

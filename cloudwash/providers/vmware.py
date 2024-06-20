@@ -9,7 +9,7 @@ from cloudwash.utils import total_running_time
 
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
-
+    dry_data['PROVIDER'] = "VMWARE"
     with compute_client("vmware") as client:
         if kwargs["vms"] or kwargs["_all"]:
             allvms = client.list_vms()

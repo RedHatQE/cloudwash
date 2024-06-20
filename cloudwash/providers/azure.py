@@ -42,7 +42,7 @@ def cleanup(**kwargs):
     data = ['VMS', 'NICS', 'DISCS', 'IMAGES', 'PIPS', 'RESOURCES']
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
-
+    dry_data['PROVIDER'] = "AZURE"
     if "all" in regions:
         # non-existent RG can be chosen for query
         # as it's never accessed and is only stored within wrapper
