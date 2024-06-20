@@ -44,6 +44,7 @@ def echo_dry(dry_data=None) -> None:
         ]
         for ocp in dry_data["OCPS"]["delete"]
     }
+    ocp_clusters = dry_data["OCPS"]["clusters"]
     deletable_resources = dry_data["RESOURCES"]["delete"]
     deletable_stacks = dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
     if deletable_vms or stopable_vms or skipped_vms:
@@ -61,7 +62,7 @@ def echo_dry(dry_data=None) -> None:
     if deletable_pips:
         logger.info(f"PIPs:\n\tDeletable: {deletable_pips}")
     if deletable_ocps:
-        logger.info(f"OCPs:\n\tDeletable: {deletable_ocps}")
+        logger.info(f"OCPs:\n\tDeletable: {deletable_ocps}\n\tClusters: {ocp_clusters}")
     if deletable_resources:
         logger.info(f"RESOURCEs:\n\tDeletable: {deletable_resources}")
     if deletable_stacks:
@@ -76,6 +77,7 @@ def echo_dry(dry_data=None) -> None:
             deletable_resources,
             deletable_stacks,
             deletable_images,
+            deletable_ocps,
         ]
     ):
         logger.info("\nNo resources are eligible for cleanup!")
@@ -172,7 +174,7 @@ def calculate_time_threshold(time_ref=""):
 
     # Time Ref is Optional; if empty, time_threshold will be set as "now"
     time_threshold = dateparser.parse(f"now-{time_ref}-UTC")
-    logger.info(
+    logger.debug(
         f"\nAssociated OCP resources are filtered by last creation time of: {time_threshold}"
     )
     return time_threshold
@@ -186,7 +188,6 @@ def filter_resources_by_time_modified(
     Filter list of AWS resources by checking modification date ("LastReportedAt")
     :param datetime time_threshold: Time filtering criteria
     :param list resources: List of resources to be filtered out
-
 
     :return: list of resources that last modified before time threshold
 
