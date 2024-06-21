@@ -73,7 +73,7 @@ AWS:
         ACCESS_KEY:
         SECRET_KEY:
         # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
-        REGIONS: []
+        REGIONS: [] # Cleanup regions
     CRITERIA:
         VM:
             # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
@@ -97,6 +97,11 @@ AWS:
             DELETE_STACK: 'test'
             # Number of minutes the deletable CloudFormation should be allowed to live, e.g 120 minutes = 2 Hours
             SLA_MINUTES: 120
+        OCPS:
+            OCP_CLIENT_REGION: "us-east-1"
+            # Specified as {time_value}{time_unit} format, e.g. "7d" = 7 Days
+            # If a time unit is not specified (the value is numeric), it will be considered as Minutes
+            SLA: 7d
     EXCEPTIONS:
         VM:
             # VM names that would be skipped from cleanup
