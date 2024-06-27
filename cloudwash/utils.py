@@ -29,7 +29,6 @@ def echo_dry(dry_data=None) -> None:
         it follows the format of module scoped `dry_data` variable in this module
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
-
     resource_data = {
         "provider": dry_data.get('PROVIDER'),
         "deletable_vms": dry_data["VMS"]["delete"],
@@ -56,11 +55,16 @@ def echo_dry(dry_data=None) -> None:
     
 def create_html(**kwargs):
     doc = dominate.document(title="Cloud resources page")
-    doc = add_css_style(doc=doc)
+
+    with doc.head:
+        with open('assets/css/reporting.css','r') as css:
+            style(css.read())
+
     with doc:
         with div(cls='cloud_box'):
+            h1('CLOUDWASH REPORT')
+            h3(f"{kwargs.get('provider')} RESOURCES")
             with table(id='cloud_table'):
-                caption(h3(f"{kwargs.get('provider')} RESOURCES"))
                 with thead():
                     with tr():
                         for table_head in kwargs.keys():
@@ -77,71 +81,6 @@ def create_html(**kwargs):
                                     td(values)
     with open('cleanup_resource.html','w') as file:
             file.write(doc.render())
-
-def add_css_style(doc):
-    with doc.head:
-        style('''
-            table, th, td {
-                border-collapse: collapse;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            #cloud_table {
-                border-collapse: collapse;
-                margin: 25px auto;
-                font: 0.9em sans-serif;
-                min-width: 800px;
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-                border-radius: 5px 5px 0 0;
-                overflow: hidden;
-            }
-
-            #cloud_table thead tr {
-                background-color: #009879;
-                color: #ffffff;
-                text-align: center;
-                font-weight: bold;
-            }
-
-            #cloud_table th, #cloud_table td {
-                padding: 12px 15px;
-            }
-
-            #cloud_table th:not(:last-child), #cloud_table td:not(:last-child) {
-                border-right: 0.1px solid black;
-            }
-
-            #cloud_table tbody tr {
-                border-bottom: 1px solid #dddddd;
-                color: #488b8b;
-                font-weight: bold;
-            }
-
-            #cloud_table tbody tr:nth-of-type(odd) {
-                background-color: #f3f3f3;
-            }
-
-            #cloud_table tbody tr:last-of-type {
-                border-bottom: 2px solid #009879;
-            }
-
-            #cloud_table tbody td {
-                text-align: left;
-            }
-
-            ul {
-                margin: 0;
-                padding: 0 0 0 20px;
-                list-style-type: circle;
-            }
-
-            ul li {
-                margin-top: 10px;
-                margin-bottom: 10px;
-            }
-        ''')
-    return doc
 
 def total_running_time(vm_obj) -> namedtuple:
     """Calculates the VMs total running time
