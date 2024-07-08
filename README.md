@@ -172,4 +172,4 @@ Removed following and all unused pips from Azure Cloud.
 ['test-axodawttrw-pip0']
 ```
 
-### [How to run the cloudwash setup locally](https://github.com/RedHatQE/cloudwash/blob/master/Docs/Run_cloudwash_locally.md)
+### [How to run the cloudwash setup locally using Minikube](https://github.com/RedHatQE/cloudwash/blob/master/Docs/Run_cloudwash_locally.md)
