@@ -17,7 +17,6 @@ cloudwash supports following cloud providers:
 
 * RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
-* VMWare vCenter (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
 NOTE: You can use `--all` flag with all the cloud providers to clean all supported resources.
@@ -172,3 +171,5 @@ Removed following and all unused discs from Azure Cloud.
 Removed following and all unused pips from Azure Cloud.
 ['test-axodawttrw-pip0']
 ```
+
+### [How to run the cloudwash setup locally using Minikube](https://github.com/RedHatQE/cloudwash/blob/master/Docs/Run_cloudwash_locally.md)
