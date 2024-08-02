@@ -10,6 +10,7 @@ from cloudwash.utils import echo_dry
 
 def cleanup(**kwargs):
     is_dry_run = kwargs.get("dry_run", False)
+    dry_data['PROVIDER'] = "AWS"
     regions = settings.aws.auth.regions
     if "all" in regions:
         with compute_client("aws", aws_region="us-west-2") as client:
