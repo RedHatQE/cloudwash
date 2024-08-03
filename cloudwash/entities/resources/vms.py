@@ -23,14 +23,14 @@ class CleanVMs(VMsCleanup):
     def list(self):
         pass
 
-    def remove(self):
+    def remove(self, **kwargs):
         for vm_name in self._delete:
-            self.client.get_vm(vm_name).delete()
+            self.client.get_vm(vm_name, **kwargs).delete()
         logger.info(f"Removed VMs: \n{self._delete}")
 
-    def stop(self):
+    def stop(self, **kwargs):
         for vm_name in self._stop:
-            self.client.get_vm(vm_name).stop()
+            self.client.get_vm(vm_name, **kwargs).stop()
         logger.info(f"Stopped VMs: \n{self._stop}")
 
     def skip(self):
@@ -90,3 +90,27 @@ class CleanAzureVMs(CleanVMs):
                 elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):
                     self._delete.append(vm.name)
         self._set_dry()
+
+
+class CleanGCEVMs(CleanVMs):
+    def list(self):
+
+        allvms = self.client.list_vms(zones=[self.client.cleaning_zone])
+
+        for vm in allvms:
+            if vm.name in settings.gce.exceptions.vm.vm_list:
+                self._skip.append(vm.name)
+                continue
+            elif total_running_time(vm).minutes >= settings.gce.criteria.vm.sla_minutes:
+                if vm.name in settings.gce.exceptions.vm.stop_list:
+                    self._stop.append(vm.name)
+                    continue
+                elif vm.name.startswith(settings.gce.criteria.vm.delete_vm):
+                    self._delete.append(vm.name)
+        self._set_dry()
+
+    def remove(self):
+        super().remove(zone=self.client.cleaning_zone)
+
+    def stop(self):
+        super().stop(zone=self.client.cleaning_zone)
