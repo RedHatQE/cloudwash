@@ -6,6 +6,8 @@ GCE:
         # Multiline json contents from Service Account key
         SERVICE_ACCOUNT: >
             {}
+        # Multiple zones can be added like ["eastus2"] or ["northeurope", "eastus2", "westus"] or ["all"] for all regions
+        ZONES: ['all']
     CRITERIA:
         VM:
             # The VM to be deleted with prepend string, e.g VM name that starts with 'test'
