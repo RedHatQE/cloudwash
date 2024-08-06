@@ -16,6 +16,24 @@ class ResourceCleanup(ABC):
         pass
 
 
+class OCPsCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
 class DiscsCleanup(ResourceCleanup):
     @abstractmethod
     def list(self):

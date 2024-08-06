@@ -98,8 +98,13 @@ def azure(ctx, vms, discs, nics, images, pips, _all, _all_rg):
 @click.option("--images", is_flag=True, help="Remove only images from the provider")
 @click.option("--pips", is_flag=True, help="Remove only Public IPs from the provider")
 @click.option("--stacks", is_flag=True, help="Remove only CloudFormations from the provider")
+@click.option(
+    "--ocps",
+    is_flag=True,
+    help="Remove only unused OCP Cluster occupied resources from the provider",
+)
 @click.pass_context
-def aws(ctx, vms, discs, nics, images, pips, stacks, _all):
+def aws(ctx, vms, discs, nics, images, pips, stacks, ocps, _all):
     # Validate Amazon Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params["dry"]
@@ -110,6 +115,7 @@ def aws(ctx, vms, discs, nics, images, pips, stacks, _all):
         images=images,
         pips=pips,
         stacks=stacks,
+        ocps=ocps,
         _all=_all,
         dry_run=is_dry_run,
     )
