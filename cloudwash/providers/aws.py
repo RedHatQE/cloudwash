@@ -10,15 +10,25 @@ from cloudwash.utils import filter_resources_by_time_modified
 from cloudwash.utils import group_ocps_by_cluster
 from cloudwash.utils import OCP_TAG_SUBSTR
 from cloudwash.utils import total_running_time
-
+import sys
 
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
     data = ['VMS', 'NICS', 'DISCS', 'PIPS', 'RESOURCES', 'STACKS', 'OCPS']
     regions = settings.aws.auth.regions
     if "all" in regions:
-        with compute_client("aws", aws_region="us-west-2") as client:
-            regions = client.list_regions()
+        default_regions = ['us-west-2', 'cn-northwest-1', 'us-gov-west-1']
+        for region in default_regions:
+            try:
+                with compute_client("aws", aws_region=region) as client:
+                    regions = client.list_regions()
+                if regions:
+                    break
+            except Exception as e:
+                pass
+        if "all" in regions:
+            logger.error(f"Unable to retrive region list using currrent token!")
+            sys.exit(1)
     for region in regions:
         dry_data['VMS']['stop'] = []
         dry_data['VMS']['skip'] = []
