@@ -1,4 +1,5 @@
 """GCE CR Cleanup Utilities"""
+
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.logger import logger

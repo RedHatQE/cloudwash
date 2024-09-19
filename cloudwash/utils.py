@@ -1,13 +1,24 @@
 """Common utils for cleanup activities of all CRs"""
+
 from collections import namedtuple
 from datetime import datetime
 
+import dominate
 import pytz
+from dominate.tags import div
+from dominate.tags import h1
+from dominate.tags import h3
+from dominate.tags import li
+from dominate.tags import style
+from dominate.tags import table
+from dominate.tags import tbody
+from dominate.tags import td
+from dominate.tags import th
+from dominate.tags import thead
+from dominate.tags import tr
+from dominate.tags import ul
 
 from cloudwash.logger import logger
-
-import dominate
-from dominate.tags import *
 
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
@@ -18,7 +29,7 @@ dry_data = {
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
-    "PROVIDER": ""
+    "PROVIDER": "",
 }
 dry_data.update(_vms_dict)
 
@@ -41,13 +52,15 @@ def echo_dry(dry_data=None) -> None:
         "deletable_images": dry_data["IMAGES"]["delete"],
         "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
         "deletable_resources": dry_data["RESOURCES"]["delete"],
-        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
+        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
     }
     if any(value for key, value in resource_data.items() if key != 'provider'):
         logger.info("Resources eligible for cleanup:")
         for key, value in resource_data.items():
-            if value and key!="provider":
-                logger.info(f"{key.replace('_', ' ').title()}:\n\t{key.split('_')[0].title()}: {value}")
+            if value and key != "provider":
+                logger.info(
+                    f"{key.replace('_', ' ').title()}:\n\t{key.split('_')[0].title()}: {value}"
+                )
 
         logger.info("\n====================================\n")
 
@@ -55,12 +68,13 @@ def echo_dry(dry_data=None) -> None:
     else:
         logger.info("\nNo resources are eligible for cleanup!\n")
 
+
 def create_html(**kwargs):
-    ''' Creates a html based report file with deletable resources.'''
+    '''Creates a html based report file with deletable resources.'''
     doc = dominate.document(title="Cloud resources page")
 
     with doc.head:
-        with open('assets/css/reporting.css','r') as css:
+        with open('assets/css/reporting.css', 'r') as css:
             style(css.read())
 
     with doc:
@@ -71,19 +85,20 @@ def create_html(**kwargs):
                 with thead():
                     with tr():
                         for table_head in kwargs.keys():
-                            if kwargs[table_head] and table_head!="provider":
-                                th(table_head.replace("_"," ").title())
+                            if kwargs[table_head] and table_head != "provider":
+                                th(table_head.replace("_", " ").title())
                 with tbody():
-                    for key,values in kwargs.items():
-                        if key!="provider" and values:
-                                if isinstance(values,list):
-                                    with td():
-                                        with ul():
-                                            [li(resource_name) for resource_name in values]
-                                else:
-                                    td(values)
-    with open('cleanup_resource.html','w') as file:
-            file.write(doc.render())
+                    for key, values in kwargs.items():
+                        if key != "provider" and values:
+                            if isinstance(values, list):
+                                with td():
+                                    with ul():
+                                        [li(resource_name) for resource_name in values]
+                            else:
+                                td(values)
+    with open('cleanup_resource.html', 'w') as file:
+        file.write(doc.render())
+
 
 def total_running_time(vm_obj) -> namedtuple:
     """Calculates the VMs total running time

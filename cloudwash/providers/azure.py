@@ -1,4 +1,5 @@
 """Azure CR Cleanup Utilities"""
+
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import azure_data as data
