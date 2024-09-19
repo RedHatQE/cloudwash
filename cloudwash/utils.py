@@ -1,5 +1,4 @@
 """Common utils for cleanup activities of all CRs"""
-
 from collections import namedtuple
 from datetime import datetime
 

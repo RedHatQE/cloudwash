@@ -1,5 +1,4 @@
 """ec2 CR Cleanup Utilities"""
-
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import aws_data as data
