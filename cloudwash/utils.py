@@ -53,14 +53,23 @@ def echo_dry(dry_data=None) -> None:
         "deletable_resources": dry_data["RESOURCES"]["delete"],
         "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
     }
-    if any(value for key, value in resource_data.items() if key != 'provider'):
-        logger.info("Resources eligible for cleanup:")
-        for key, value in resource_data.items():
-            if value and key != "provider":
-                logger.info(
-                    f"{key.replace('_', ' ').title()}:\n\t{key.split('_')[0].title()}: {value}"
-                )
 
+    # Group the same resource type under the same section for logging
+    grouped_resources = {}
+    for key, value in resource_data.items():
+        if key != 'provider' and value:
+            suffix = key.split('_')[1].upper()
+            action = key.split('_')[0].title()
+
+            if suffix not in grouped_resources.keys():
+                grouped_resources[suffix] = {}
+            grouped_resources[suffix][action] = value
+
+    if any(value for key, value in resource_data.items() if key != 'provider'):
+        for suffix, actions in grouped_resources.items():
+            logger.info(f"{suffix}:")
+            for action, value in actions.items():
+                logger.info(f"\t{action}: {value}")
         logger.info("\n====================================\n")
 
         create_html(**resource_data)
