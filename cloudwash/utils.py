@@ -7,6 +7,8 @@ import pytz
 from cloudwash.logger import logger
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
+_containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
+
 dry_data = {
     "NICS": {"delete": []},
     "DISCS": {"delete": []},
@@ -16,6 +18,7 @@ dry_data = {
     "IMAGES": {"delete": []},
 }
 dry_data.update(_vms_dict)
+dry_data.update(_containers_dict)
 
 
 def echo_dry(dry_data=None) -> None:
@@ -28,6 +31,9 @@ def echo_dry(dry_data=None) -> None:
     deletable_vms = dry_data["VMS"]["delete"]
     stopable_vms = dry_data["VMS"]["stop"]
     skipped_vms = dry_data["VMS"]["skip"]
+    deletable_containers = dry_data["CONTAINERS"]["delete"]
+    stopable_containers = dry_data["CONTAINERS"]["stop"]
+    skipped_containers = dry_data["CONTAINERS"]["skip"]
     deletable_discs = dry_data["DISCS"]["delete"]
     deletable_nics = dry_data["NICS"]["delete"]
     deletable_images = dry_data["IMAGES"]["delete"]
@@ -38,6 +44,12 @@ def echo_dry(dry_data=None) -> None:
         logger.info(
             f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
             f"Skip: {skipped_vms}"
+        )
+    if deletable_containers or stopable_containers or skipped_containers:
+        logger.info(
+            f"Containers:\n\tDeletable: {deletable_containers}\n\t"
+            f"Stoppable: {stopable_containers}\n\t"
+            f"Skip: {skipped_containers}"
         )
     if deletable_discs:
         logger.info(f"DISCs:\n\tDeletable: {deletable_discs}")
@@ -61,6 +73,9 @@ def echo_dry(dry_data=None) -> None:
             deletable_resources,
             deletable_stacks,
             deletable_images,
+            deletable_containers,
+            stopable_containers,
+            skipped_containers,
         ]
     ):
         logger.info("\nNo resources are eligible for cleanup!")
