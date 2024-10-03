@@ -7,15 +7,12 @@ import pytz
 from dominate.tags import div
 from dominate.tags import h1
 from dominate.tags import h3
-from dominate.tags import li
 from dominate.tags import style
 from dominate.tags import table
 from dominate.tags import tbody
 from dominate.tags import td
-from dominate.tags import th
-from dominate.tags import thead
 from dominate.tags import tr
-from dominate.tags import ul
+from dominate.util import raw
 
 from cloudwash.logger import logger
 
@@ -90,21 +87,20 @@ def create_html(**kwargs):
             h1('CLOUDWASH REPORT')
             h3(f"{kwargs.get('provider')} RESOURCES")
             with table(id='cloud_table'):
-                with thead():
-                    with tr():
-                        for table_head in kwargs.keys():
-                            if kwargs[table_head] and table_head != "provider":
-                                th(table_head.replace("_", " ").title())
                 with tbody():
-                    for key, values in kwargs.items():
-                        if key != "provider" and values:
-                            if isinstance(values, list):
-                                with td():
-                                    with ul():
-                                        [li(resource_name) for resource_name in values]
-                            else:
-                                td(values)
-    with open('cleanup_resource.html', 'w') as file:
+                    for table_head in kwargs.keys():
+                        if kwargs[table_head] and table_head != "provider":
+                            with tr():
+                                td(table_head.replace("_", " ").title())
+                                bullet = '&#8226;'
+                                if isinstance(kwargs[table_head], list):
+                                    component = ''
+                                    for resource_name in kwargs[table_head]:
+                                        component += bullet + ' ' + resource_name + ' '
+                                    td(raw(component))
+                                else:
+                                    td(raw(bullet + ' ' + kwargs[table_head]))
+    with open('cleanup_resource_{}.html'.format(kwargs.get('provider')), 'w') as file:
         file.write(doc.render())
 
 
