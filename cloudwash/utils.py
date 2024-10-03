@@ -18,6 +18,8 @@ from cloudwash.logger import logger
 
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
+_containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
+
 dry_data = {
     "NICS": {"delete": []},
     "DISCS": {"delete": []},
@@ -28,6 +30,7 @@ dry_data = {
     "PROVIDER": "",
 }
 dry_data.update(_vms_dict)
+dry_data.update(_containers_dict)
 
 
 def echo_dry(dry_data=None) -> None:
@@ -36,13 +39,15 @@ def echo_dry(dry_data=None) -> None:
     :param dict dry_data: The deletable resources dry data of a Compute Resource,
         it follows the format of module scoped `dry_data` variable in this module
     """
-
     logger.info("\n=========== DRY SUMMARY ============\n")
     resource_data = {
         "provider": dry_data.get('PROVIDER'),
         "deletable_vms": dry_data["VMS"]["delete"],
         "stopable_vms": dry_data["VMS"]["stop"],
         "skipped_vms": dry_data["VMS"]["skip"],
+        "deletable_containers": dry_data["CONTAINERS"]["delete"],
+        "stopable_containers": dry_data["CONTAINERS"]["stop"],
+        "skipped_containers": dry_data["CONTAINERS"]["skip"],
         "deletable_discs": dry_data["DISCS"]["delete"],
         "deletable_nics": dry_data["NICS"]["delete"],
         "deletable_images": dry_data["IMAGES"]["delete"],

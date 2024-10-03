@@ -6,6 +6,7 @@ from cloudwash.logger import logger
 from cloudwash.providers.aws import cleanup as awsCleanup
 from cloudwash.providers.azure import cleanup as azureCleanup
 from cloudwash.providers.gce import cleanup as gceCleanup
+from cloudwash.providers.podman import cleanup as podmanCleanup
 
 # Adding the pythonpath for importing modules from cloudwash packages
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
@@ -111,6 +112,19 @@ def aws(ctx, vms, discs, nics, images, pips, stacks, _all):
         pips=pips,
         stacks=stacks,
         _all=_all,
+        dry_run=is_dry_run,
+    )
+
+
+@cleanup_providers.command(help="Cleanup Podman provider")
+@click.option("--containers", is_flag=True, help="Remove containers from the podman host")
+@click.pass_context
+def podman(ctx, containers):
+    # Validate Podman Settings
+    validate_provider(ctx.command.name)
+    is_dry_run = ctx.parent.params["dry"]
+    podmanCleanup(
+        containers=containers,
         dry_run=is_dry_run,
     )
 

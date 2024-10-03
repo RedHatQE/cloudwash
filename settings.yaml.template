@@ -109,3 +109,20 @@ AWS:
             # CloudFormations names that would be skipped from cleanup
             STACK_LIST: []
         IMAGES: []
+PODMAN:
+    AUTH:
+        HOSTNAME:
+        USERNAME: root
+        SSH_PORT: 22
+    CRITERIA:
+        CONTAINER:
+            # Container Prepended Test
+            NAME_PREFIX: 'satci'
+            # Container running time in minutes
+            SLA: 720
+    EXCEPTIONS:
+        CONTAINER:
+            # Containers to skip and not to delete
+            SKIP_LIST: []
+            # Containers to stop if running but not delete
+            STOP_LIST: []

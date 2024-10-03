@@ -132,6 +132,32 @@ class VMsCleanup(ResourceCleanup):
         pass
 
 
+class ContainerCleanup(ResourceCleanup):
+    @abstractmethod
+    def list(self):
+        pass
+
+    @abstractmethod
+    def cleanup(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
+    def remove(self):
+        pass
+
+    @abstractmethod
+    def skip(self):
+        pass
+
+    @abstractmethod
+    def _set_dry(self):
+        pass
+
+
 class ResourceCleanupManager:
     def __init__(self):
         self.resources = []

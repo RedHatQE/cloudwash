@@ -1,3 +1,4 @@
+from cloudwash.entities.resources.containers import CleanPodmanContainers
 from cloudwash.entities.resources.discs import CleanAWSDiscs
 from cloudwash.entities.resources.discs import CleanAzureDiscs
 from cloudwash.entities.resources.images import CleanAWSImages
@@ -81,3 +82,13 @@ class GCECleanup(providerCleanup):
     def __init__(self, client):
         self.client = client
         super().__init__(client)
+
+
+class PodmanCleanup(providerCleanup):
+    def __init__(self, client):
+        self.client = client
+        super().__init__(client)
+
+    @property
+    def containers(self):
+        return CleanPodmanContainers(client=self.client)
