@@ -11,6 +11,7 @@ from cloudwash.utils import gce_zones
 
 def cleanup(**kwargs):
     is_dry_run = kwargs.get("dry_run", False)
+    dry_data['PROVIDER'] = "GCE"
     zones = settings.gce.auth.get('zones', ['all'])
     if "all" in zones:
         zones = gce_zones()
@@ -18,6 +19,7 @@ def cleanup(**kwargs):
         logger.warning("Cloudwash does not supports NICs operation for GCE yet!")
     if kwargs["discs"] or kwargs["_all"]:
         logger.warning("Cloudwash does not supports DISCs operation for GCE yet!")
+
     with compute_client("gce") as gce_client:
         for zone in zones:
             for items in data:

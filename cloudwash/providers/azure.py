@@ -10,7 +10,7 @@ from cloudwash.utils import echo_dry
 
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
-
+    dry_data['PROVIDER'] = "AZURE"
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
 
@@ -19,7 +19,6 @@ def cleanup(**kwargs):
         # as it's never accessed and is only stored within wrapper
         with compute_client("azure", azure_region="us-west", resource_group="foo") as azure_client:
             regions = list(zip(*azure_client.list_region()))[0]
-
     for region in regions:
         if "all" in groups:
             # non-existent RG can be chosen for query

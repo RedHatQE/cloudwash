@@ -2,9 +2,20 @@
 from collections import namedtuple
 from datetime import datetime
 
+import dominate
 import pytz
+from dominate.tags import div
+from dominate.tags import h1
+from dominate.tags import h3
+from dominate.tags import style
+from dominate.tags import table
+from dominate.tags import tbody
+from dominate.tags import td
+from dominate.tags import tr
+from dominate.util import raw
 
 from cloudwash.logger import logger
+
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 _containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
@@ -16,6 +27,7 @@ dry_data = {
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
+    "PROVIDER": "",
 }
 dry_data.update(_vms_dict)
 dry_data.update(_containers_dict)
@@ -28,58 +40,73 @@ def echo_dry(dry_data=None) -> None:
         it follows the format of module scoped `dry_data` variable in this module
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
-    deletable_vms = dry_data["VMS"]["delete"]
-    stopable_vms = dry_data["VMS"]["stop"]
-    skipped_vms = dry_data["VMS"]["skip"]
-    deletable_containers = dry_data["CONTAINERS"]["delete"]
-    stopable_containers = dry_data["CONTAINERS"]["stop"]
-    skipped_containers = dry_data["CONTAINERS"]["skip"]
-    deletable_discs = dry_data["DISCS"]["delete"]
-    deletable_nics = dry_data["NICS"]["delete"]
-    deletable_images = dry_data["IMAGES"]["delete"]
-    deletable_pips = dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None
-    deletable_resources = dry_data["RESOURCES"]["delete"]
-    deletable_stacks = dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None
-    if deletable_vms or stopable_vms or skipped_vms:
-        logger.info(
-            f"VMs:\n\tDeletable: {deletable_vms}\n\tStoppable: {stopable_vms}\n\t"
-            f"Skip: {skipped_vms}"
-        )
-    if deletable_containers or stopable_containers or skipped_containers:
-        logger.info(
-            f"Containers:\n\tDeletable: {deletable_containers}\n\t"
-            f"Stoppable: {stopable_containers}\n\t"
-            f"Skip: {skipped_containers}"
-        )
-    if deletable_discs:
-        logger.info(f"DISCs:\n\tDeletable: {deletable_discs}")
-    if deletable_nics:
-        logger.info(f"NICs:\n\tDeletable: {deletable_nics}")
-    if deletable_images:
-        logger.info(f"IMAGES:\n\tDeletable: {deletable_images}")
-    if deletable_pips:
-        logger.info(f"PIPs:\n\tDeletable: {deletable_pips}")
-    if deletable_resources:
-        logger.info(f"RESOURCEs:\n\tDeletable: {deletable_resources}")
-    if deletable_stacks:
-        logger.info(f"STACKs:\n\tDeletable: {deletable_stacks}")
-    if not any(
-        [
-            deletable_vms,
-            stopable_vms,
-            deletable_discs,
-            deletable_nics,
-            deletable_pips,
-            deletable_resources,
-            deletable_stacks,
-            deletable_images,
-            deletable_containers,
-            stopable_containers,
-            skipped_containers,
-        ]
-    ):
-        logger.info("\nNo resources are eligible for cleanup!")
-    logger.info("\n====================================\n")
+    resource_data = {
+        "provider": dry_data.get('PROVIDER'),
+        "deletable_vms": dry_data["VMS"]["delete"],
+        "stopable_vms": dry_data["VMS"]["stop"],
+        "skipped_vms": dry_data["VMS"]["skip"],
+        "deletable_containers": dry_data["CONTAINERS"]["delete"],
+        "stopable_containers": dry_data["CONTAINERS"]["stop"],
+        "skipped_containers": dry_data["CONTAINERS"]["skip"],
+        "deletable_discs": dry_data["DISCS"]["delete"],
+        "deletable_nics": dry_data["NICS"]["delete"],
+        "deletable_images": dry_data["IMAGES"]["delete"],
+        "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
+        "deletable_resources": dry_data["RESOURCES"]["delete"],
+        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
+    }
+
+    # Group the same resource type under the same section for logging
+    grouped_resources = {}
+    for key, value in resource_data.items():
+        if key != 'provider' and value:
+            suffix = key.split('_')[1].upper()
+            action = key.split('_')[0].title()
+
+            if suffix not in grouped_resources.keys():
+                grouped_resources[suffix] = {}
+            grouped_resources[suffix][action] = value
+
+    if any(value for key, value in resource_data.items() if key != 'provider'):
+        for suffix, actions in grouped_resources.items():
+            logger.info(f"{suffix}:")
+            for action, value in actions.items():
+                logger.info(f"\t{action}: {value}")
+        logger.info("\n====================================\n")
+
+        create_html(**resource_data)
+    else:
+        logger.info("\nNo resources are eligible for cleanup!\n")
+
+
+def create_html(**kwargs):
+    '''Creates a html based report file with deletable resources.'''
+    doc = dominate.document(title="Cloud resources page")
+
+    with doc.head:
+        with open('assets/css/reporting.css', 'r') as css:
+            style(css.read())
+
+    with doc:
+        with div(cls='cloud_box'):
+            h1('CLOUDWASH REPORT')
+            h3(f"{kwargs.get('provider')} RESOURCES")
+            with table(id='cloud_table'):
+                with tbody():
+                    for table_head in kwargs.keys():
+                        if kwargs[table_head] and table_head != "provider":
+                            with tr():
+                                td(table_head.replace("_", " ").title())
+                                bullet = '&#8226;'
+                                if isinstance(kwargs[table_head], list):
+                                    component = ''
+                                    for resource_name in kwargs[table_head]:
+                                        component += bullet + ' ' + resource_name + ' '
+                                    td(raw(component))
+                                else:
+                                    td(raw(bullet + ' ' + kwargs[table_head]))
+    with open('cleanup_resource_{}.html'.format(kwargs.get('provider')), 'w') as file:
+        file.write(doc.render())
 
 
 def total_running_time(vm_obj) -> namedtuple:
