@@ -1,4 +1,5 @@
 """Common utils for cleanup activities of all CRs"""
+import importlib.resources
 from collections import namedtuple
 from datetime import datetime
 
@@ -14,8 +15,8 @@ from dominate.tags import td
 from dominate.tags import tr
 from dominate.util import raw
 
+from cloudwash.assets import css
 from cloudwash.logger import logger
-
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 _containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
@@ -84,8 +85,8 @@ def create_html(**kwargs):
     doc = dominate.document(title="Cloud resources page")
 
     with doc.head:
-        with open('assets/css/reporting.css', 'r') as css:
-            style(css.read())
+        with importlib.resources.open_text(css, 'reporting.css') as css_file:
+            style(css_file.read())
 
     with doc:
         with div(cls='cloud_box'):
