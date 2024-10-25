@@ -11,6 +11,7 @@ from cloudwash.entities.resources.stacks import CleanAWSStacks
 from cloudwash.entities.resources.vms import CleanAWSVms
 from cloudwash.entities.resources.vms import CleanAzureVMs
 from cloudwash.entities.resources.vms import CleanGCEVMs
+from cloudwash.entities.resources.vms import CleanVMWareVMs
 
 
 class providerCleanup:
@@ -26,6 +27,8 @@ class providerCleanup:
             return CleanAWSVms(client=self.client)
         elif 'GCE' in providerclass:
             return CleanGCEVMs(client=self.client)
+        elif 'VMWare' in providerclass:
+            return CleanVMWareVMs(client=self.client)
 
     @property
     def discs(self):
@@ -82,6 +85,12 @@ class GCECleanup(providerCleanup):
     def __init__(self, client):
         self.client = client
         super().__init__(client)
+
+
+class VMWareCleanup(providerCleanup):
+    def __init__(self, client):
+        self.client = client
+        super().__init__(self.client)
 
 
 class PodmanCleanup(providerCleanup):
