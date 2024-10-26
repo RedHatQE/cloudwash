@@ -25,13 +25,19 @@ class CleanVMs(VMsCleanup):
 
     def remove(self, **kwargs):
         for vm_name in self._delete:
-            self.client.get_vm(vm_name, **kwargs).delete()
-        logger.info(f"Removed VMs: \n{self._delete}")
+            try:
+                self.client.get_vm(vm_name, **kwargs).delete()
+                logger.info(f"Removed VMs: \n{self._delete}")
+            except Exception:
+                logger.exception(f"Error removing VM {vm_name}")
 
     def stop(self, **kwargs):
         for vm_name in self._stop:
-            self.client.get_vm(vm_name, **kwargs).stop()
-        logger.info(f"Stopped VMs: \n{self._stop}")
+            try:
+                self.client.get_vm(vm_name, **kwargs).stop()
+                logger.info(f"Stopped VMs: \n{self._stop}")
+            except Exception:
+                logger.exception(f"Error stopping VM {vm_name}")
 
     def skip(self):
         logger.info(f"Skipped VMs: \n{self._skip}")
@@ -55,8 +61,6 @@ class CleanAWSVms(CleanVMs):
             elif total_running_time(vm).minutes >= settings.aws.criteria.vm.sla_minutes:
                 if vm.name in settings.aws.exceptions.vm.stop_list:
                     self._stop.append(vm.name)
-                    continue
-
                 elif vm.name.startswith(settings.aws.criteria.vm.delete_vm):
                     self._delete.append(vm.name)
         self._set_dry()
@@ -86,7 +90,6 @@ class CleanAzureVMs(CleanVMs):
             ):
                 if vm.name in settings.azure.exceptions.vm.stop_list:
                     self._stop.append(vm.name)
-                    continue
                 elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):
                     self._delete.append(vm.name)
         self._set_dry()
@@ -104,7 +107,6 @@ class CleanGCEVMs(CleanVMs):
             elif total_running_time(vm).minutes >= settings.gce.criteria.vm.sla_minutes:
                 if vm.name in settings.gce.exceptions.vm.stop_list:
                     self._stop.append(vm.name)
-                    continue
                 elif vm.name.startswith(settings.gce.criteria.vm.delete_vm):
                     self._delete.append(vm.name)
         self._set_dry()
@@ -114,3 +116,20 @@ class CleanGCEVMs(CleanVMs):
 
     def stop(self):
         super().stop(zone=self.client.cleaning_zone)
+
+
+class CleanVMWareVMs(CleanVMs):
+    def list(self):
+
+        allvms = self.client.list_vms()
+
+        for vm in allvms:
+            if vm.name in settings.vmware.exceptions.vm.vm_list:
+                self._skip.append(vm.name)
+                continue
+            elif total_running_time(vm).minutes >= settings.vmware.criteria.vm.sla_minutes:
+                if vm.name in settings.vmware.exceptions.vm.stop_list:
+                    self._stop.append(vm.name)
+                elif vm.name.startswith(settings.vmware.criteria.vm.delete_vm):
+                    self._delete.append(vm.name)
+        self._set_dry()
