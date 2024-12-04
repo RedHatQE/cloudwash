@@ -12,27 +12,44 @@ def cleanup(**kwargs):
     is_dry_run = kwargs.get("dry_run", False)
     dry_data['PROVIDER'] = "AWS"
     regions = settings.aws.auth.regions
-    if "all" in regions:
-        with compute_client("aws", aws_region="us-west-2") as client:
-            regions = client.list_regions()
-    for region in regions:
-        for items in data:
-            dry_data[items]['delete'] = []
-        with compute_client("aws", aws_region=region) as aws_client:
-            awscleanup = AWSCleanup(client=aws_client)
-            # Actual Cleaning and dry execution
-            logger.info(f"\nResources from the region: {region}")
-            if kwargs["vms"] or kwargs["_all"]:
-                awscleanup.vms.cleanup()
-            if kwargs["nics"] or kwargs["_all"]:
-                awscleanup.nics.cleanup()
-            if kwargs["discs"] or kwargs["_all"]:
-                awscleanup.discs.cleanup()
-            if kwargs["pips"] or kwargs["_all"]:
-                awscleanup.pips.cleanup()
-            if kwargs["images"] or kwargs["_all"]:
-                awscleanup.images.cleanup()
-            if kwargs["stacks"] or kwargs["_all"]:
-                awscleanup.stacks.cleanup()
-            if is_dry_run:
-                echo_dry(dry_data)
+    if kwargs["ocps"]:
+        aws_client_region = settings.aws.criteria.ocps.ocp_client_region
+        with compute_client("aws", aws_region=aws_client_region) as aws_ocp_client:
+            if "all" in regions:
+                regions = aws_ocp_client.list_regions()
+            awscleanup = AWSCleanup(client=aws_ocp_client)
+            for region in regions:
+                aws_ocp_client.cleaning_region = region
+                # Emptying the dry data for previous region everytime
+                for items in data:
+                    dry_data[items]['delete'] = []
+                logger.info(f"\nResources from the region: {region}")
+                awscleanup.ocps.cleanup()
+                if is_dry_run:
+                    echo_dry(dry_data)
+    else:
+        if "all" in regions:
+            with compute_client("aws", aws_region="us-west-2") as client:
+                regions = client.list_regions()
+        for region in regions:
+            # Emptying the dry data for previous region everytime
+            for items in data:
+                dry_data[items]['delete'] = []
+            with compute_client("aws", aws_region=region) as aws_client:
+                awscleanup = AWSCleanup(client=aws_client)
+                # Actual Cleaning and dry execution
+                logger.info(f"\nResources from the region: {region}")
+                if kwargs["vms"] or kwargs["_all"]:
+                    awscleanup.vms.cleanup()
+                if kwargs["nics"] or kwargs["_all"]:
+                    awscleanup.nics.cleanup()
+                if kwargs["discs"] or kwargs["_all"]:
+                    awscleanup.discs.cleanup()
+                if kwargs["pips"] or kwargs["_all"]:
+                    awscleanup.pips.cleanup()
+                if kwargs["images"] or kwargs["_all"]:
+                    awscleanup.images.cleanup()
+                if kwargs["stacks"] or kwargs["_all"]:
+                    awscleanup.stacks.cleanup()
+                if is_dry_run:
+                    echo_dry(dry_data)

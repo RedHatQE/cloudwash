@@ -3,8 +3,10 @@ import importlib.resources
 from collections import namedtuple
 from datetime import datetime
 
+import dateparser
 import dominate
 import pytz
+from dominate.tags import br
 from dominate.tags import div
 from dominate.tags import h1
 from dominate.tags import h3
@@ -14,9 +16,12 @@ from dominate.tags import tbody
 from dominate.tags import td
 from dominate.tags import tr
 from dominate.util import raw
+from wrapanapi.systems.ec2 import ResourceExplorerResource
 
 from cloudwash.assets import css
 from cloudwash.logger import logger
+
+OCP_TAG_SUBSTR = "kubernetes.io/cluster/"
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 _containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
@@ -25,11 +30,13 @@ dry_data = {
     "NICS": {"delete": []},
     "DISCS": {"delete": []},
     "PIPS": {"delete": []},
+    "OCPS": {"delete": []},
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
     "PROVIDER": "",
 }
+
 dry_data.update(_vms_dict)
 dry_data.update(_containers_dict)
 
@@ -41,6 +48,7 @@ def echo_dry(dry_data=None) -> None:
         it follows the format of module scoped `dry_data` variable in this module
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
+
     resource_data = {
         "provider": dry_data.get('PROVIDER'),
         "deletable_vms": dry_data["VMS"]["delete"],
@@ -55,6 +63,12 @@ def echo_dry(dry_data=None) -> None:
         "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
         "deletable_resources": dry_data["RESOURCES"]["delete"],
         "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
+        "deletable_ocps": {
+            ocp.resource_type: [
+                r.name for r in dry_data["OCPS"]["delete"] if r.resource_type == ocp.resource_type
+            ]
+            for ocp in dry_data["OCPS"]["delete"]
+        },
     }
 
     # Group the same resource type under the same section for logging
@@ -73,11 +87,12 @@ def echo_dry(dry_data=None) -> None:
             logger.info(f"{suffix}:")
             for action, value in actions.items():
                 logger.info(f"\t{action}: {value}")
-        logger.info("\n====================================\n")
 
         create_html(**resource_data)
     else:
         logger.info("\nNo resources are eligible for cleanup!\n")
+
+    logger.info("\n====================================\n")
 
 
 def create_html(**kwargs):
@@ -99,11 +114,21 @@ def create_html(**kwargs):
                             with tr():
                                 td(table_head.replace("_", " ").title())
                                 bullet = '&#8226;'
+                                tab = '&nbsp;'
                                 if isinstance(kwargs[table_head], list):
                                     component = ''
                                     for resource_name in kwargs[table_head]:
                                         component += bullet + ' ' + resource_name + ' '
                                     td(raw(component))
+                                elif isinstance(kwargs[table_head], dict):
+                                    component = []
+                                    for rtype, resources in kwargs[table_head].items():
+                                        comp_line = ' ' + tab * 2 + ' '
+                                        rtype_line = bullet + rtype + str(br())
+                                        for resource_name in resources:
+                                            comp_line += bullet + ' ' + resource_name + ' '
+                                        component.append(rtype_line + comp_line)
+                                    td(raw(str(br()).join(component)))
                                 else:
                                     td(raw(bullet + ' ' + kwargs[table_head]))
     with open('cleanup_resource_{}.html'.format(kwargs.get('provider')), 'w') as file:
@@ -155,3 +180,77 @@ def gce_zones() -> list:
     _zones_combo = {**_bcds, **_abcfs, **_abcs}
     zones = [f"{loc}-{zone}" for loc, zones in _zones_combo.items() for zone in zones]
     return zones
+
+
+def group_ocps_by_cluster(resources: list = None) -> dict:
+    """Group different types of AWS resources under their original OCP clusters
+    :param list resources: AWS resources collected by defined region and sla
+    :return: A dictionary with the clusters as keys and the associated resources as values
+    """
+    if resources is None:
+        resources = []
+    clusters_map = {}
+
+    for resource in resources:
+        for key in resource.get_tags(regex=OCP_TAG_SUBSTR):
+            cluster_name = key.get("Key")
+            if OCP_TAG_SUBSTR in cluster_name:
+                cluster_name = cluster_name.split(OCP_TAG_SUBSTR)[1]
+                if cluster_name not in clusters_map.keys():
+                    clusters_map[cluster_name] = {"Resources": [], "Instances": []}
+
+                # Set cluster's EC2 instances
+                if hasattr(resource, 'ec2_instance'):
+                    clusters_map[cluster_name]["Instances"].append(resource)
+                # Set resource under cluster
+                else:
+                    clusters_map[cluster_name]["Resources"].append(resource)
+    return clusters_map
+
+
+def calculate_time_threshold(time_ref=""):
+    """Parses a time reference for data filtering
+    :param str time_ref: a relative time reference for indicating the filter value
+    of a relative time, given in a {time_value}{time_unit} format; default is "" (no filtering)
+    :return datetime time_threshold
+    """
+    if time_ref is None:
+        time_ref = ""
+
+    if time_ref.isnumeric():
+        # Use default time value as Minutes
+        time_ref += "m"
+
+    # Time Ref is Optional; if empty, time_threshold will be set as "now"
+    time_threshold = dateparser.parse(f"now-{time_ref}-UTC")
+    logger.debug(
+        f"\nAssociated OCP resources are filtered by last creation time of: {time_threshold}"
+    )
+    return time_threshold
+
+
+def filter_resources_by_time_modified(
+    time_threshold,
+    resources: list[ResourceExplorerResource] = None,
+) -> list:
+    """
+    Filter list of AWS resources by checking modification date ("LastReportedAt")
+    :param datetime time_threshold: Time filtering criteria
+    :param list resources: List of resources to be filtered out
+    :return: list of resources that last modified before time threshold
+    :Example:
+        Use the time_ref "1h" to collect resources that exist for more than an hour
+    """
+    filtered_resources = []
+
+    for resource in resources:
+        # Will not collect resources recorded during the SLA time
+        if resource.date_modified > time_threshold:
+            continue
+        filtered_resources.append(resource)
+    return filtered_resources
+
+
+def delete_ocp(ocp):
+    # WIP: add support for deletion
+    pass

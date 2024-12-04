@@ -5,6 +5,7 @@ from cloudwash.entities.resources.images import CleanAWSImages
 from cloudwash.entities.resources.images import CleanAzureImages
 from cloudwash.entities.resources.nics import CleanAWSNics
 from cloudwash.entities.resources.nics import CleanAzureNics
+from cloudwash.entities.resources.ocps import CleanAWSOcps
 from cloudwash.entities.resources.pips import CleanAWSPips
 from cloudwash.entities.resources.pips import CleanAzurePips
 from cloudwash.entities.resources.stacks import CleanAWSStacks
@@ -17,6 +18,14 @@ from cloudwash.entities.resources.vms import CleanVMWareVMs
 class providerCleanup:
     def __init__(self, client):
         self.client = client
+
+    @property
+    def ocps(self):
+        providerclass = self.__class__.__name__
+        if 'AWS' in providerclass:
+            return CleanAWSOcps(client=self.client)
+        else:
+            raise NotImplementedError(f'The OCPs cleanup on {providerclass} is not implemented')
 
     @property
     def vms(self):
