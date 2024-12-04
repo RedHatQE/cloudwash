@@ -1,9 +1,11 @@
-"""ec2 CR Cleanup Utilities"""
+"""AWS CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import aws_data as data
 from cloudwash.entities.providers import AWSCleanup
 from cloudwash.logger import logger
+from cloudwash.utils import calculate_time_threshold
+from cloudwash.utils import delete_ocp
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
 

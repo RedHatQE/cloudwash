@@ -8,17 +8,22 @@ Most importantly, `cloudwash` provides the CLI utility called '`swach`' that can
 
 cloudwash supports following cloud providers:
 
-* Amazon EC2
-* Google Cloud
-* Microsoft Azure
+| Cloud Providers  | vms    | nics    | discs     | images   | pips    | stacks   |
+|------------------|--------|---------|-----------|----------|---------|----------|
+| Amazon EC2       | &check;| &check; | &check;   |  &check; |  &check;|  &check; |
+| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  **NA**  |
+| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  **NA**  |
+| VMWare           | &check;| &check; | &check;   |  &cross; |  **NA** |  **NA**  |
+
 * RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
-* VMWare vCenter (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
 And the Containerization tools:
 
 * Podman
+
+NOTE: You can use `--all` flag with all the cloud providers to clean all supported resources.
 
 The list of resource types it helps to clean could be found under settings.yaml.template](https://github.com/RedHatQE/cloudwash/blob/master/settings.yaml.template) file for individual cloud providers along with cleanup criteria.
 
@@ -137,37 +142,3 @@ Options:
 
 ```
 # swach -d azure --all
-
-<<<<<<< Running the cleanup script in DRY RUN mode >>>>>>>
-The AZURE providers settings are initialized and validated !
-
-=========== DRY SUMMARY ============
-
-VMs:
-	Deletable: ['test-bvhoduliam']
-	Stoppable: ['foremanqe-nightly2']
-DISCs:
-	Deletable: ['test-bvhoduliam-osdisk']
-NICs:
-	Deletable: ['test-axodawttrw-nic0']
-PIPs:
-	Deletable: ['test-axodawttrw-pip0']
-====================================
-```
-
-* Actual Cleanup Run:
-
-```
-# swach azure --all
-
-<<<<<<< Running the cleanup script in ACTION mode >>>>>>>
-The AZURE providers settings are initialized and validated !
-
-Stopped [] and removed ['test-bvhoduliam'] VMs from Azure Cloud.
-Removed following and all unused nics from Azure Cloud.
-['test-axodawttrw-nic0']
-Removed following and all unused discs from Azure Cloud.
-['test-bvhoduliam-osdisk']
-Removed following and all unused pips from Azure Cloud.
-['test-axodawttrw-pip0']
-```

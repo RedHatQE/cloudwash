@@ -75,7 +75,7 @@ AWS:
         ACCESS_KEY:
         SECRET_KEY:
         # Multiple regions can be added like ["ap-south-1", "us-west-2", "us-west-1"] or ["all"] for all regions
-        REGIONS: []
+        REGIONS: [] # Cleanup regions
     CRITERIA:
         VM:
             # The VM to be deleted with prepend string, e.g VM name that starts with 'test'

@@ -184,6 +184,7 @@ def gce_zones() -> list:
 
 def group_ocps_by_cluster(resources: list = None) -> dict:
     """Group different types of AWS resources under their original OCP clusters
+
     :param list resources: AWS resources collected by defined region and sla
     :return: A dictionary with the clusters as keys and the associated resources as values
     """
@@ -210,6 +211,7 @@ def group_ocps_by_cluster(resources: list = None) -> dict:
 
 def calculate_time_threshold(time_ref=""):
     """Parses a time reference for data filtering
+
     :param str time_ref: a relative time reference for indicating the filter value
     of a relative time, given in a {time_value}{time_unit} format; default is "" (no filtering)
     :return datetime time_threshold
