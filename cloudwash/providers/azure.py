@@ -1,45 +1,16 @@
 """Azure CR Cleanup Utilities"""
 from cloudwash.client import compute_client
 from cloudwash.config import settings
+from cloudwash.constants import azure_data as data
+from cloudwash.entities.providers import AzureCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
-from cloudwash.utils import total_running_time
-
-
-def _dry_vms(all_vms):
-    """Filters and returns running VMs to be deleted from all VMs"""
-    _vms = {"stop": [], "delete": [], "skip": []}
-    for vm in all_vms:
-        # Remove the VM that's in Failed state and cant perform in assessments
-        if not vm.exists:
-            _vms["delete"].append(vm.name)
-            continue
-        # Don't assess the VM that is still in creating state
-        if vm.state.lower() == "vmstate.creating":
-            continue
-        # Match the user defined criteria in settings to delete the VM
-        if vm.name in settings.azure.exceptions.vm.vm_list:
-            _vms["skip"].append(vm.name)
-            continue
-        elif (
-            getattr(
-                total_running_time(vm), "minutes", int(settings.azure.criteria.vm.sla_minutes) + 1
-            )
-            >= settings.azure.criteria.vm.sla_minutes
-        ):
-            if vm.name in settings.azure.exceptions.vm.stop_list:
-                _vms["stop"].append(vm.name)
-                continue
-            elif vm.name.startswith(settings.azure.criteria.vm.delete_vm):
-                _vms["delete"].append(vm.name)
-    return _vms
 
 
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
-
-    data = ['VMS', 'NICS', 'DISCS', 'IMAGES', 'PIPS', 'RESOURCES']
+    dry_data['PROVIDER'] = "AZURE"
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
 
@@ -48,7 +19,6 @@ def cleanup(**kwargs):
         # as it's never accessed and is only stored within wrapper
         with compute_client("azure", azure_region="us-west", resource_group="foo") as azure_client:
             regions = list(zip(*azure_client.list_region()))[0]
-
     for region in regions:
         if "all" in groups:
             # non-existent RG can be chosen for query
@@ -57,38 +27,11 @@ def cleanup(**kwargs):
                 groups = azure_client.list_resource_groups()
 
         for group in groups:
-            dry_data['VMS']['stop'] = []
-            dry_data['VMS']['skip'] = []
             for items in data:
                 dry_data[items]['delete'] = []
 
             with compute_client("azure", azure_region=region, resource_group=group) as azure_client:
-                # Dry Data Collection Defs
-                def dry_vms():
-                    all_vms = azure_client.list_vms()
-                    dry_data["VMS"] = _dry_vms(all_vms)
-                    return dry_data["VMS"]
-
-                def dry_nics():
-                    rnics = []
-                    if settings.azure.criteria.nic.unassigned:
-                        rnics = azure_client.list_free_nics()
-                        [dry_data["NICS"]["delete"].append(dnic) for dnic in rnics]
-                    return rnics
-
-                def dry_discs():
-                    rdiscs = []
-                    if settings.azure.criteria.disc.unassigned:
-                        rdiscs = azure_client.list_free_discs()
-                        [dry_data["DISCS"]["delete"].append(ddisc) for ddisc in rdiscs]
-                    return rdiscs
-
-                def dry_pips():
-                    rpips = []
-                    if settings.azure.criteria.public_ip.unassigned:
-                        rpips = azure_client.list_free_pip()
-                        [dry_data["PIPS"]["delete"].append(dpip) for dpip in rpips]
-                    return rpips
+                azurecleanup = AzureCleanup(client=azure_client)
 
                 def dry_resources(hours_old=None):
                     dry_data["RESOURCES"]["delete"] = azure_client.list_resources_from_hours_old(
@@ -97,65 +40,19 @@ def cleanup(**kwargs):
                     )
                     return dry_data["RESOURCES"]["delete"]
 
-                def dry_images():
-                    remove_images = []
-                    if settings.azure.criteria.image.unassigned:
-                        images_list = azure_client.list_compute_images_by_resource_group(
-                            free_images=True
-                        )
-                        image_names = [image.name for image in images_list]
-                        # Filter out the images not to be removed.
-                        remove_images = [
-                            image
-                            for image in image_names
-                            if image not in settings.azure.exceptions.images
-                        ]
-                        if settings.azure.criteria.image.delete_image:
-                            remove_images = [
-                                image
-                                for image in remove_images
-                                if image.startswith(settings.azure.criteria.image.delete_image)
-                            ]
-                        dry_data["IMAGES"]["delete"].extend(remove_images)
-                    return remove_images
-
-                # Remove / Stop VMs
-                def remove_vms(avms):
-                    # Remove VMs
-                    [azure_client.get_vm(vm_name).delete() for vm_name in avms["delete"]]
-                    # Stop VMs
-                    [azure_client.get_vm(vm_name).stop() for vm_name in avms["stop"]]
-
                 # Actual Cleaning and dry execution
                 logger.info(f"\nResources from the region and resource group: {region}/{group}")
 
                 if kwargs["vms"] or kwargs["_all"]:
-                    avms = dry_vms()
-                    if not is_dry_run:
-                        remove_vms(avms=avms)
-                        logger.info(f"Stopped VMs: \n{avms['stop']}")
-                        logger.info(f"Removed VMs: \n{avms['delete']}")
-                        logger.info(f"Skipped VMs: \n{avms['skip']}")
+                    azurecleanup.vms.cleanup()
                 if kwargs["nics"] or kwargs["_all"]:
-                    rnics = dry_nics()
-                    if not is_dry_run and rnics:
-                        azure_client.remove_nics_by_search()
-                        logger.info(f"Removed NICs: \n{rnics}")
+                    azurecleanup.nics.cleanup()
                 if kwargs["discs"] or kwargs["_all"]:
-                    rdiscs = dry_discs()
-                    if not is_dry_run and rdiscs:
-                        azure_client.remove_discs_by_search()
-                        logger.info(f"Removed Discs: \n{rdiscs}")
+                    azurecleanup.discs.cleanup()
                 if kwargs["pips"] or kwargs["_all"]:
-                    rpips = dry_pips()
-                    if not is_dry_run and rpips:
-                        azure_client.remove_pips_by_search()
-                        logger.info(f"Removed PIPs: \n{rpips}")
+                    azurecleanup.pips.cleanup()
                 if kwargs["images"] or kwargs["_all"]:
-                    rimages = dry_images()
-                    if not is_dry_run and rimages:
-                        azure_client.delete_compute_image_by_resource_group(image_list=rimages)
-                        logger.info(f"Removed Images: \n{rimages}")
+                    azurecleanup.images.cleanup()
 
                 if kwargs["_all_rg"]:
                     sla_time = settings.azure.criteria.resource_group.resources_sla_minutes

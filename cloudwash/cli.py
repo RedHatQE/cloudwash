@@ -6,6 +6,7 @@ from cloudwash.logger import logger
 from cloudwash.providers.aws import cleanup as awsCleanup
 from cloudwash.providers.azure import cleanup as azureCleanup
 from cloudwash.providers.gce import cleanup as gceCleanup
+from cloudwash.providers.podman import cleanup as podmanCleanup
 from cloudwash.providers.vmware import cleanup as vmwareCleanup
 
 # Adding the pythonpath for importing modules from cloudwash packages
@@ -51,8 +52,9 @@ def cleanup_providers(ctx, dry, version):
         click.echo(f"Version: {cloudwash_version}")
         click.echo(f"Settings File: {settings.settings_file}")
     if ctx.invoked_subcommand:
+        settings.set('dry_run', dry)
         logger.info(
-            f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} RUN mode >>>>>>>"
+            f"\n<<<<<<< Running the cleanup script in {'DRY' if dry else 'ACTION'} mode >>>>>>>"
         )
 
 
@@ -121,13 +123,32 @@ def aws(ctx, vms, discs, nics, images, pips, stacks, ocps, _all):
     )
 
 
+@cleanup_providers.command(help="Cleanup Podman provider")
+@click.option("--containers", is_flag=True, help="Remove containers from the podman host")
+@click.pass_context
+def podman(ctx, containers):
+    # Validate Podman Settings
+    validate_provider(ctx.command.name)
+    is_dry_run = ctx.parent.params["dry"]
+    podmanCleanup(
+        containers=containers,
+        dry_run=is_dry_run,
+    )
+
+
 @cleanup_providers.command(help="Cleanup VMWare provider")
 @common_options
 @click.pass_context
 def vmware(ctx, vms, discs, nics, _all):
     validate_provider(ctx.command.name)
-    is_dry_run = ctx.parent.params["dry"]
-    vmwareCleanup(vms=vms, discs=discs, nics=nics, _all=_all, dry_run=is_dry_run)
+    is_dry_run = ctx.parant.params['dry']
+    vmwareCleanup(
+        vms=vms,
+        discs=discs,
+        nics=nics,
+        _all=_all,
+        dry_run=is_dry_run,
+    )
 
 
 @cleanup_providers.command(help="Cleanup RHEV provider")
