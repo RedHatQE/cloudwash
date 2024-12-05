@@ -19,6 +19,10 @@ cloudwash supports following cloud providers:
 * RedHat Openstack (_Support yet To be added_)
 * OCP Clusters deplyed on Public clouds (_Support yet To be added_)
 
+**And the Containerization tools:**
+
+* Podman
+
 NOTE: You can use `--all` flag with all the cloud providers to clean all supported resources.
 
 The list of resource types it helps to clean could be found under settings.yaml.template](https://github.com/RedHatQE/cloudwash/blob/master/settings.yaml.template) file for individual cloud providers along with cleanup criteria.
@@ -109,6 +113,7 @@ azure		Cleanup Azure provider
 aws			Cleanup Amazon provider
 gce			Cleanup GCE provider
 openstack	Cleanup OSP provider
+podman      Cleanup Podman provider
 rhev 		Cleanup RHEV provider
 vmware 		Cleanup VMWare provider
 ```

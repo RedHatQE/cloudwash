@@ -34,6 +34,12 @@ def compute_client(compute_resource, **kwargs):
             password=settings.aws.auth.secret_key,
             region=kwargs['aws_region'],
         )
+    elif compute_resource == "podman":
+        client = wrapanapi.Podman(
+            hostname=settings.podman.auth.hostname,
+            username=settings.podman.auth.username,
+            port=settings.podman.auth.ssh_port,
+        )
     elif compute_resource == "vmware":
         client = wrapanapi.VMWareSystem(
             hostname=settings.vmware.auth.vcenter,
@@ -44,7 +50,6 @@ def compute_client(compute_resource, **kwargs):
         raise ValueError(
             f"{compute_resource} is an incorrect value. It should be one of azure or gce or ec2"
         )
-
     try:
         yield client
     finally:
