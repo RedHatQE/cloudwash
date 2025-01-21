@@ -31,6 +31,9 @@ AWS:
             # Specified as {time_value}{time_unit} format, e.g. "7d" = 7 Days
             # If a time unit is not specified (the value is numeric), it will be considered as Minutes
             SLA: 7d
+            # Specify OCP clusters prefix to filter by, for example: "my_project_", "openshift-" etc..
+            # Don't use '*' to express the use of a prefix
+            OCP_PREFIX:
     EXCEPTIONS:
         VM:
             # VM names that would be skipped from cleanup

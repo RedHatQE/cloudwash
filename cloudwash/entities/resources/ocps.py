@@ -31,7 +31,9 @@ class CleanAWSOcps(CleanOCPs):
     def list(self):
         time_threshold = calculate_time_threshold(time_ref=settings.aws.criteria.ocps.sla)
 
-        query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}*", f"region:{self.client.cleaning_region}"])
+        ocp_prefix = settings.aws.criteria.ocps.ocp_prefix or ""
+        query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}{ocp_prefix}*", f"region:{self.client.cleaning_region}"])
+
         resources = self.client.list_resources(query=query)
 
         # Prepare resources to be filtered before deletion
