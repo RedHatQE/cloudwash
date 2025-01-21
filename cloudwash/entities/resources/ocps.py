@@ -34,7 +34,9 @@ class CleanAWSOcps(CleanOCPs):
 
         ocp_prefix = list(settings.aws.criteria.ocps.ocp_prefix) or [""]
         for prefix in ocp_prefix:
-            query = " ".join([f"tag.key:{OCP_TAG_SUBSTR}{prefix}*", f"region:{self.client.cleaning_region}"])
+            query = " ".join(
+                [f"tag.key:{OCP_TAG_SUBSTR}{prefix}*", f"region:{self.client.cleaning_region}"]
+            )
             resources.extend(self.client.list_resources(query=query))
 
         # Prepare resources to be filtered before deletion
