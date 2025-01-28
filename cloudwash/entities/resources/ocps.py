@@ -30,9 +30,9 @@ class CleanOCPs(OCPsCleanup):
 class CleanAWSOcps(CleanOCPs):
     def list(self):
         resources = []
-        time_threshold = calculate_time_threshold(time_ref=settings.aws.criteria.ocps.sla)
+        time_threshold = calculate_time_threshold(time_ref=settings.aws.criteria.ocps.get("SLA"))
 
-        ocp_prefix = list(settings.aws.criteria.ocps.ocp_prefix) or [""]
+        ocp_prefix = list(settings.aws.criteria.ocps.get("OCP_PREFIXES") or [""])
         for prefix in ocp_prefix:
             query = " ".join(
                 [f"tag.key:{OCP_TAG_SUBSTR}{prefix}*", f"region:{self.client.cleaning_region}"]
