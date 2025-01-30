@@ -4,7 +4,7 @@ settings.yaml
 .cache/
 .eggs
 *.egg-info
-**/cleanup*.log
+**/cleanup*
 *.pyc
 dist/
 build/
