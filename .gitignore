@@ -4,13 +4,10 @@ settings.yaml
 .cache/
 .eggs
 *.egg-info
+**/cleanup*
 *.pyc
 dist/
 build/
 conf/*.yaml
 vcd_sdk.log
 *_venv
-
-# Cleanup Logs
-**/cleanup*.log
-**/cleanup*.html
