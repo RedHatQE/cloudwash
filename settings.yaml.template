@@ -105,7 +105,8 @@ AWS:
             # If a time unit is not specified (the value is numeric), it will be considered as Minutes
             SLA: 7d
             # Specify OCP clusters prefix to filter by, for example: ["my_project_", "openshift-"] etc..
-            # Don't use '*' to express the use of a prefix
+            # Regular expression based prefix is not supported
+            # Won't be considered if not given
             OCP_PREFIXES: []
     EXCEPTIONS:
         VM:
