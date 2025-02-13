@@ -19,6 +19,7 @@ def cleanup(**kwargs):
                 regions = aws_ocp_client.list_regions()
             awscleanup = AWSCleanup(client=aws_ocp_client)
             for region in regions:
+                dry_data['REGION'] = region
                 aws_ocp_client.cleaning_region = region
                 # Emptying the dry data for previous region everytime
                 for items in data:
@@ -32,6 +33,7 @@ def cleanup(**kwargs):
             with compute_client("aws", aws_region="us-west-2") as client:
                 regions = client.list_regions()
         for region in regions:
+            dry_data['REGION'] = region
             # Emptying the dry data for previous region everytime
             for items in data:
                 dry_data[items]['delete'] = []

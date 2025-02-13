@@ -19,6 +19,15 @@ body {
     table-layout: fixed; /* Ensure the first column has a fixed width */
     width: 100%; /* Set the table width */
   }
+  #cloud_table caption {
+    font-size: 1.8em; /* Adjust as needed */
+    font-weight: bold;
+    color: #333; /* Ensure it's different from the first column */
+    background-color: transparent; /* Remove background if applied */
+    padding: 15px;
+    text-align: center;
+    border-bottom: 2px solid #009879; /* Optional: add a border to separate from table */
+  }
   /* Styling the first column */
   #cloud_table tbody td:first-child {
     background-color: #009879;

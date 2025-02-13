@@ -7,6 +7,7 @@ import dateparser
 import dominate
 import pytz
 from dominate.tags import br
+from dominate.tags import caption
 from dominate.tags import div
 from dominate.tags import h1
 from dominate.tags import h3
@@ -35,6 +36,9 @@ dry_data = {
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
     "PROVIDER": "",
+    "REGION": "",
+    "GROUP": "",
+    "ZONE": ""
 }
 
 dry_data.update(_vms_dict)
@@ -51,6 +55,9 @@ def echo_dry(dry_data=None) -> None:
 
     resource_data = {
         "provider": dry_data.get('PROVIDER'),
+        "region": dry_data.get('REGION'),
+        "group": dry_data.get('GROUP'),
+        "zone": dry_data.get('ZONE'),
         "deletable_vms": dry_data["VMS"]["delete"],
         "stopable_vms": dry_data["VMS"]["stop"],
         "skipped_vms": dry_data["VMS"]["skip"],
@@ -73,8 +80,9 @@ def echo_dry(dry_data=None) -> None:
 
     # Group the same resource type under the same section for logging
     grouped_resources = {}
+    non_data_keys = ('provider', 'zone', 'region', 'group')
     for key, value in resource_data.items():
-        if key != 'provider' and value:
+        if key not in non_data_keys and value:
             suffix = key.split('_')[1].upper()
             action = key.split('_')[0].title()
 
@@ -82,7 +90,7 @@ def echo_dry(dry_data=None) -> None:
                 grouped_resources[suffix] = {}
             grouped_resources[suffix][action] = value
 
-    if any(value for key, value in resource_data.items() if key != 'provider'):
+    if any(value for key, value in resource_data.items() if key not in non_data_keys):
         for suffix, actions in grouped_resources.items():
             logger.info(f"{suffix}:")
             for action, value in actions.items():
@@ -94,20 +102,33 @@ def echo_dry(dry_data=None) -> None:
 
     logger.info("\n====================================\n")
 
+def table_caption(provider, region, zone, group):
+    tab_caption = ''
+    if provider == 'gce':
+        tab_caption = f'Zone: {zone}'
+    elif provider == 'azure':
+        tab_caption = f'Region: {region}, Group: {group}'
+    elif provider == 'aws':
+        tab_caption = f'Region: {region}'
+    return tab_caption
+
 
 def create_html(**kwargs):
     '''Creates a html based report file with deletable resources.'''
     doc = dominate.document(title="Cloud resources page")
-
+    provider = kwargs.get('provider')
+    tab_caption = table_caption(
+        provider, region=kwargs.get('region'), zone=kwargs.get('zone'), group=kwargs.get('group')
+    )
     with doc.head:
         with importlib.resources.open_text(css, 'reporting.css') as css_file:
             style(css_file.read())
-
     with doc:
         with div(cls='cloud_box'):
             h1('CLOUDWASH REPORT')
-            h3(f"{kwargs.get('provider')} RESOURCES")
+            h3(f"{provider} RESOURCES")
             with table(id='cloud_table'):
+                caption(tab_caption)
                 with tbody():
                     for table_head in kwargs.keys():
                         if kwargs[table_head] and table_head != "provider":
@@ -131,7 +152,7 @@ def create_html(**kwargs):
                                     td(raw(str(br()).join(component)))
                                 else:
                                     td(raw(bullet + ' ' + kwargs[table_head]))
-    with open('cleanup_resource_{}.html'.format(kwargs.get('provider')), 'w') as file:
+    with open(f'cleanup_resource_{provider}.html', 'w') as file:
         file.write(doc.render())
 
 

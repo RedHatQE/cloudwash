@@ -22,6 +22,7 @@ def cleanup(**kwargs):
 
     with compute_client("gce") as gce_client:
         for zone in zones:
+            dry_data['ZONE'] = zone
             for items in data:
                 dry_data[items]['delete'] = []
             gce_client.cleaning_zone = zone

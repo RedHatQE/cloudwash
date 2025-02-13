@@ -20,6 +20,7 @@ def cleanup(**kwargs):
         with compute_client("azure", azure_region="us-west", resource_group="foo") as azure_client:
             regions = list(zip(*azure_client.list_region()))[0]
     for region in regions:
+        dry_data['REGION'] = region
         if "all" in groups:
             # non-existent RG can be chosen for query
             # as it's never accessed and is only stored within wrapper
@@ -27,6 +28,7 @@ def cleanup(**kwargs):
                 groups = azure_client.list_resource_groups()
 
         for group in groups:
+            dry_data['GROUP'] = group
             for items in data:
                 dry_data[items]['delete'] = []
 
