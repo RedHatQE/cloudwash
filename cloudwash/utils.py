@@ -38,7 +38,7 @@ dry_data = {
     "PROVIDER": "",
     "REGION": "",
     "GROUP": "",
-    "ZONE": ""
+    "ZONE": "",
 }
 non_rt_keys = ('provider', 'zone', 'region', 'group')
 
@@ -101,11 +101,13 @@ def echo_dry(dry_data=None) -> None:
 
     logger.info("\n====================================\n")
 
+
 def table_caption(kwargs):
     '''Returns the caption for the table based on the provider'''
     caption_dict = {
-        'GCE': f'Zone: {kwargs.get('zone')}', 'AZURE': f'Region: {kwargs.get('region')}, Group: {kwargs.get('group')}',
-        'AWS': f'Region: {kwargs.get('region')}'
+        'GCE': f"Zone: {kwargs.get('zone')}",
+        'AZURE': f"Region: {kwargs.get('region')}, Group: {kwargs.get('group')}",
+        'AWS': f"Region: {kwargs.get('region')}",
     }
     provider = kwargs.get('provider')
     return caption_dict.get(provider, '')
