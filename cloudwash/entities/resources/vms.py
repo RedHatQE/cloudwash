@@ -67,6 +67,7 @@ class CleanAWSVms(CleanVMs):
 
 
 class CleanAzureVMs(CleanVMs):
+
     def list(self):
         all_vms = self.client.list_vms()
 

@@ -40,6 +40,7 @@ dry_data = {
     "GROUP": "",
     "ZONE": ""
 }
+non_rt_keys = ('provider', 'zone', 'region', 'group')
 
 dry_data.update(_vms_dict)
 dry_data.update(_containers_dict)
@@ -77,12 +78,10 @@ def echo_dry(dry_data=None) -> None:
             for ocp in dry_data["OCPS"]["delete"]
         },
     }
-
     # Group the same resource type under the same section for logging
     grouped_resources = {}
-    non_data_keys = ('provider', 'zone', 'region', 'group')
     for key, value in resource_data.items():
-        if key not in non_data_keys and value:
+        if key not in non_rt_keys and value:
             suffix = key.split('_')[1].upper()
             action = key.split('_')[0].title()
 
@@ -90,7 +89,7 @@ def echo_dry(dry_data=None) -> None:
                 grouped_resources[suffix] = {}
             grouped_resources[suffix][action] = value
 
-    if any(value for key, value in resource_data.items() if key not in non_data_keys):
+    if any(value for key, value in resource_data.items() if key not in non_rt_keys):
         for suffix, actions in grouped_resources.items():
             logger.info(f"{suffix}:")
             for action, value in actions.items():
@@ -102,24 +101,21 @@ def echo_dry(dry_data=None) -> None:
 
     logger.info("\n====================================\n")
 
-def table_caption(provider, region, zone, group):
-    tab_caption = ''
-    if provider == 'gce':
-        tab_caption = f'Zone: {zone}'
-    elif provider == 'azure':
-        tab_caption = f'Region: {region}, Group: {group}'
-    elif provider == 'aws':
-        tab_caption = f'Region: {region}'
-    return tab_caption
+def table_caption(kwargs):
+    '''Returns the caption for the table based on the provider'''
+    caption_dict = {
+        'GCE': f'Zone: {kwargs.get('zone')}', 'AZURE': f'Region: {kwargs.get('region')}, Group: {kwargs.get('group')}',
+        'AWS': f'Region: {kwargs.get('region')}'
+    }
+    provider = kwargs.get('provider')
+    return caption_dict.get(provider, '')
 
 
 def create_html(**kwargs):
     '''Creates a html based report file with deletable resources.'''
     doc = dominate.document(title="Cloud resources page")
     provider = kwargs.get('provider')
-    tab_caption = table_caption(
-        provider, region=kwargs.get('region'), zone=kwargs.get('zone'), group=kwargs.get('group')
-    )
+    tab_caption = table_caption(kwargs)
     with doc.head:
         with importlib.resources.open_text(css, 'reporting.css') as css_file:
             style(css_file.read())
@@ -131,7 +127,7 @@ def create_html(**kwargs):
                 caption(tab_caption)
                 with tbody():
                     for table_head in kwargs.keys():
-                        if kwargs[table_head] and table_head != "provider":
+                        if kwargs[table_head] and table_head not in non_rt_keys:
                             with tr():
                                 td(table_head.replace("_", " ").title())
                                 bullet = '&#8226;'
