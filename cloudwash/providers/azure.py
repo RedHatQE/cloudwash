@@ -1,9 +1,12 @@
 """Azure CR Cleanup Utilities"""
+from copy import deepcopy
+
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import azure_data as data
 from cloudwash.entities.providers import AzureCleanup
 from cloudwash.logger import logger
+from cloudwash.utils import create_html
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
 
@@ -13,6 +16,7 @@ def cleanup(**kwargs):
     dry_data['PROVIDER'] = "AZURE"
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
+    all_data = []
 
     if "all" in regions:
         # non-existent RG can be chosen for query
@@ -81,3 +85,6 @@ def cleanup(**kwargs):
                         logger.info(f"Removed Resources: \n{rres}")
                 if is_dry_run:
                     echo_dry(dry_data)
+                    all_data.append(deepcopy(dry_data))
+    if is_dry_run:
+        create_html(dry_data['PROVIDER'], all_data)

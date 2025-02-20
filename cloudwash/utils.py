@@ -10,7 +10,6 @@ from dominate.tags import br
 from dominate.tags import caption
 from dominate.tags import div
 from dominate.tags import h1
-from dominate.tags import h3
 from dominate.tags import style
 from dominate.tags import table
 from dominate.tags import tbody
@@ -46,14 +45,7 @@ dry_data.update(_vms_dict)
 dry_data.update(_containers_dict)
 
 
-def echo_dry(dry_data=None) -> None:
-    """Prints and Logs the per resource cleanup data on STDOUT and logfile
-
-    :param dict dry_data: The deletable resources dry data of a Compute Resource,
-        it follows the format of module scoped `dry_data` variable in this module
-    """
-    logger.info("\n=========== DRY SUMMARY ============\n")
-
+def resourcewise_data(dry_data=None) -> dict:
     resource_data = {
         "provider": dry_data.get('PROVIDER'),
         "region": dry_data.get('REGION'),
@@ -78,8 +70,20 @@ def echo_dry(dry_data=None) -> None:
             for ocp in dry_data["OCPS"]["delete"]
         },
     }
+    return resource_data
+
+
+def echo_dry(dry_data=None) -> None:
+    """Prints and Logs the per resource cleanup data on STDOUT and logfile
+
+    :param dict dry_data: The deletable resources dry data of a Compute Resource,
+        it follows the format of module scoped `dry_data` variable in this module
+    """
+    logger.info("\n=========== DRY SUMMARY ============\n")
+
     # Group the same resource type under the same section for logging
     grouped_resources = {}
+    resource_data = resourcewise_data(dry_data)
     for key, value in resource_data.items():
         if key not in non_rt_keys and value:
             suffix = key.split('_')[1].upper()
@@ -94,8 +98,6 @@ def echo_dry(dry_data=None) -> None:
             logger.info(f"{suffix}:")
             for action, value in actions.items():
                 logger.info(f"\t{action}: {value}")
-
-        create_html(**resource_data)
     else:
         logger.info("\nNo resources are eligible for cleanup!\n")
 
@@ -113,43 +115,60 @@ def table_caption(kwargs):
     return caption_dict.get(provider, '')
 
 
-def create_html(**kwargs):
-    '''Creates a html based report file with deletable resources.'''
+def create_html(provider, all_data):
+    """
+    Creates an HTML report file with deletable resources for a given provider.
+    Args:
+        provider (str): The name of the cloud provider.
+        all_data (list): A list of dictionaries containing resource data for different regions.
+    Returns:
+        None: The function writes the generated HTML content to
+        a file named 'cleanup_resource_<provider>.html'.
+    The generated HTML report includes:
+        - A title "Cloud resources page".
+        - A header "CLOUDWASH REPORT-<provider>".
+        - A table for each region's resource data.
+        - Resource names listed with bullet points.
+        - Nested resource types and their respective resources.
+    Note:
+        The function uses the 'dominate' library to create the HTML structure and
+        'importlib.resources' to read a CSS file for styling.
+    """
     doc = dominate.document(title="Cloud resources page")
-    provider = kwargs.get('provider')
-    tab_caption = table_caption(kwargs)
     with doc.head:
         with importlib.resources.open_text(css, 'reporting.css') as css_file:
             style(css_file.read())
     with doc:
         with div(cls='cloud_box'):
-            h1('CLOUDWASH REPORT')
-            h3(f"{provider} RESOURCES")
-            with table(id='cloud_table'):
-                caption(tab_caption)
-                with tbody():
-                    for table_head in kwargs.keys():
-                        if kwargs[table_head] and table_head not in non_rt_keys:
-                            with tr():
-                                td(table_head.replace("_", " ").title())
-                                bullet = '&#8226;'
-                                tab = '&nbsp;'
-                                if isinstance(kwargs[table_head], list):
-                                    component = ''
-                                    for resource_name in kwargs[table_head]:
-                                        component += bullet + ' ' + resource_name + ' '
-                                    td(raw(component))
-                                elif isinstance(kwargs[table_head], dict):
-                                    component = []
-                                    for rtype, resources in kwargs[table_head].items():
-                                        comp_line = ' ' + tab * 2 + ' '
-                                        rtype_line = bullet + rtype + str(br())
-                                        for resource_name in resources:
-                                            comp_line += bullet + ' ' + resource_name + ' '
-                                        component.append(rtype_line + comp_line)
-                                    td(raw(str(br()).join(component)))
-                                else:
-                                    td(raw(bullet + ' ' + kwargs[table_head]))
+            h1(f'CLOUDWASH REPORT - {provider}')
+            for region_data in all_data:
+                data = resourcewise_data(region_data)
+                with table(id='cloud_table'):
+                    tab_caption = table_caption(data)
+                    caption(tab_caption)
+                    with tbody():
+                        for table_head in data.keys():
+                            if data[table_head] and table_head not in non_rt_keys:
+                                with tr():
+                                    td(table_head.replace("_", " ").title())
+                                    bullet = '&#8226;'
+                                    tab = '&nbsp;'
+                                    if isinstance(data[table_head], list):
+                                        component = ''
+                                        for resource_name in data[table_head]:
+                                            component += bullet + ' ' + resource_name + ' '
+                                        td(raw(component))
+                                    elif isinstance(data[table_head], dict):
+                                        component = []
+                                        for rtype, resources in data[table_head].items():
+                                            comp_line = ' ' + tab * 2 + ' '
+                                            rtype_line = bullet + rtype + str(br())
+                                            for resource_name in resources:
+                                                comp_line += bullet + ' ' + resource_name + ' '
+                                            component.append(rtype_line + comp_line)
+                                        td(raw(str(br()).join(component)))
+                                    else:
+                                        td(raw(bullet + ' ' + data[table_head]))
     with open(f'cleanup_resource_{provider}.html', 'w') as file:
         file.write(doc.render())
 
