@@ -143,32 +143,34 @@ def create_html(provider, all_data):
             h1(f'CLOUDWASH REPORT - {provider}')
             for region_data in all_data:
                 data = resourcewise_data(region_data)
-                with table(id='cloud_table'):
-                    tab_caption = table_caption(data)
-                    caption(tab_caption)
-                    with tbody():
-                        for table_head in data.keys():
-                            if data[table_head] and table_head not in non_rt_keys:
-                                with tr():
-                                    td(table_head.replace("_", " ").title())
-                                    bullet = '&#8226;'
-                                    tab = '&nbsp;'
-                                    if isinstance(data[table_head], list):
-                                        component = ''
-                                        for resource_name in data[table_head]:
-                                            component += bullet + ' ' + resource_name + ' '
-                                        td(raw(component))
-                                    elif isinstance(data[table_head], dict):
-                                        component = []
-                                        for rtype, resources in data[table_head].items():
-                                            comp_line = ' ' + tab * 2 + ' '
-                                            rtype_line = bullet + rtype + str(br())
-                                            for resource_name in resources:
-                                                comp_line += bullet + ' ' + resource_name + ' '
-                                            component.append(rtype_line + comp_line)
-                                        td(raw(str(br()).join(component)))
-                                    else:
-                                        td(raw(bullet + ' ' + data[table_head]))
+                # Check if there is any data to display, else skip creating the table
+                if any(data[key] for key in data.keys() if key not in non_rt_keys):
+                    with table(id='cloud_table'):
+                        tab_caption = table_caption(data)
+                        caption(tab_caption)
+                        with tbody():
+                            for table_head in data.keys():
+                                if data[table_head] and table_head not in non_rt_keys:
+                                    with tr():
+                                        td(table_head.replace("_", " ").title())
+                                        bullet = '&#8226;'
+                                        tab = '&nbsp;'
+                                        if isinstance(data[table_head], list):
+                                            component = ''
+                                            for resource_name in data[table_head]:
+                                                component += bullet + ' ' + resource_name + ' '
+                                            td(raw(component))
+                                        elif isinstance(data[table_head], dict):
+                                            component = []
+                                            for rtype, resources in data[table_head].items():
+                                                comp_line = ' ' + tab * 2 + ' '
+                                                rtype_line = bullet + rtype + str(br())
+                                                for resource_name in resources:
+                                                    comp_line += bullet + ' ' + resource_name + ' '
+                                                component.append(rtype_line + comp_line)
+                                            td(raw(str(br()).join(component)))
+                                        else:
+                                            td(raw(bullet + ' ' + data[table_head]))
     with open(f'cleanup_resource_{provider}.html', 'w') as file:
         file.write(doc.render())
 
