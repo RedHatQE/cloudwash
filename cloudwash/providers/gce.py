@@ -1,9 +1,12 @@
 """GCE CR Cleanup Utilities"""
+from copy import deepcopy
+
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import gce_data as data
 from cloudwash.entities.providers import GCECleanup
 from cloudwash.logger import logger
+from cloudwash.utils import create_html
 from cloudwash.utils import dry_data
 from cloudwash.utils import echo_dry
 from cloudwash.utils import gce_zones
@@ -13,6 +16,8 @@ def cleanup(**kwargs):
     is_dry_run = kwargs.get("dry_run", False)
     dry_data['PROVIDER'] = "GCE"
     zones = settings.gce.auth.get('zones', ['all'])
+    all_data = []
+
     if "all" in zones:
         zones = gce_zones()
     if kwargs["nics"] or kwargs["_all"]:
@@ -32,3 +37,7 @@ def cleanup(**kwargs):
                 gcecleanup.vms.cleanup()
             if is_dry_run:
                 echo_dry(dry_data)
+                all_data.append(deepcopy(dry_data))
+
+    if is_dry_run:
+        create_html(dry_data['PROVIDER'], all_data)
