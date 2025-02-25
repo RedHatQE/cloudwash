@@ -8,16 +8,16 @@ Most importantly, `cloudwash` provides the CLI utility called '`swach`' that can
 
 cloudwash supports following cloud providers:
 
-| Cloud Providers  | vms    | nics    | discs     | images   | pips    | stacks   |
-|------------------|--------|---------|-----------|----------|---------|----------|
-| Amazon EC2       | &check;| &check; | &check;   |  &check; |  &check;|  &check; |
-| Microsoft Azure  | &check;| &check; | &check;   |  &check; |  &check;|  **NA**  |
-| Google Cloud     | &check;| &check; | &check;   |  &cross; |  &cross;|  **NA**  |
-| VMWare           | &check;| &check; | &check;   |  &cross; |  **NA** |  **NA**  |
+| Cloud Providers  | VMs     | NICs    | DISCs   | IMAGEs  | Groups  | OCPs    | PIPs    | Stacks   |
+|------------------|---------|---------|---------|---------|---------|---------|---------|----------|
+| Amazon EC2       | &check; | &check; | &check; | &check; | &cross; | **DRY** | &check; | &check;  |
+| Microsoft Azure  | &check; | &check; | &check; | &check; | &check; | &cross; | &check; | **NA**   |
+| Google Cloud     | &check; | &cross; | &cross; | &cross; | &cross; | &cross; | &cross; | **NA**   |
+| VMWare           | &check; | &check; | &check; | &cross; | &cross; | &cross; | **NA**  | **NA**   |
 
-* RedHat Enterprize Virtualization Manager - RHEV (_Support yet To be added_)
+* RedHat Enterprise Virtualization Manager - RHEV (_Support yet To be added_)
 * RedHat Openstack (_Support yet To be added_)
-* OCP Clusters deplyed on Public clouds (_Support yet To be added_)
+* OCP Clusters deployed on Public clouds (_Support yet To be added_)
 
 **And the Containerization tools:**
 
