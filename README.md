@@ -1,5 +1,10 @@
 # Cloudwash
 
+[![PyPi & Quay Releases](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml)
+[![CodeQL](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml)
+[![Dependabot Updates](https://github.com/RedHatQE/cloudwash/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/dependabot/dependabot-updates)
+[![pages-build-deployment](https://github.com/RedHatQE/cloudwash/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/pages/pages-build-deployment)
+
 ## Introduction
 
 `cloudwash` is a library written in python that can be used to monitor and remove the unused cloud resources in public and private cloud providers.
