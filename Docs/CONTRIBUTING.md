@@ -41,7 +41,7 @@ To validate the Feature or Bug fixes:
 - You should populate the settings in a `settings.yaml` file in the root directory of the project. You can use the `settings.yaml.template` file as a reference to create your settings file.
 - Or, You may also choose to populate settings in a conf directory for specific provider.
 
-Refer the [User Guide](https://github.com/RedHatQE/cloudwash/blob/master/Docs/USER_GUIDE.md) for setting the environment and running the cleanup commands. 
+Refer the [User Guide](https://github.com/RedHatQE/cloudwash/blob/master/Docs/USER_GUIDE.md) for setting the environment and running the cleanup commands.
 
 ### 6. Commit Your Changes
 Use clear and descriptive commit messages:
@@ -67,4 +67,3 @@ If you encounter bugs or have feature suggestions, please open an issue [here](h
 
 ---
 Thank you for contributing to Cloudwash! 🚀
-
