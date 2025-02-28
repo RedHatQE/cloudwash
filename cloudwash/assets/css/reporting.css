@@ -1,53 +1,98 @@
 body {
-    font-family: sans-serif;
-  }
-  h1, h3 {
-    margin-left: 15px;
-  }
-  table, th, td {
-    border-collapse: collapse;
-    margin-left: 0;
-  }
-  #cloud_table {
-    border-collapse: collapse;
-    margin: 25px 0;
-    font: 0.9em sans-serif;
-    min-width: 800px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-    border-radius: 5px 5px 0 0;
-    overflow: hidden;
-    table-layout: fixed; /* Ensure the first column has a fixed width */
-    width: 100%; /* Set the table width */
-  }
-  /* Styling the first column */
-  #cloud_table tbody td:first-child {
-    background-color: #009879;
-    color: #ffffff;
-    text-align: center;
-    font-weight: bold;
-    width: 250px; /* Set a fixed width for the first column */
-    white-space: nowrap; /* Prevent text wrapping in the first column */
-  }
-  #cloud_table th, #cloud_table td {
-    padding: 12px 15px;
-  }
-  #cloud_table th:not(:last-child), #cloud_table td:not(:last-child) {
-    border-right: 0.1px solid black;
-  }
-  #cloud_table tbody tr {
-    border-bottom: 1px solid #dddddd;
-    color: #488b8b;
-    font-weight: bold;
-  }
-  #cloud_table tbody tr:nth-of-type(odd) {
-    background-color: #f3f3f3;
-  }
-  #cloud_table tbody tr:last-of-type {
-    border-bottom: 2px solid #009879;
-  }
-  #cloud_table tbody td {
-    text-align: left;
-  }
-  #cloud_table td {
-    font-size: 0.8em;
-  }
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f9; /* Light gray background for the page */
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h3 {
+  margin-left: 15px;
+  color: #333;
+}
+
+table, th, td {
+  border-collapse: collapse;
+  margin-left: 0;
+}
+
+#cloud_table {
+  border-collapse: collapse;
+  margin: 25px 0;
+  font: 0.9em 'Arial', sans-serif;
+  min-width: 800px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  table-layout: fixed; /* Ensure the first column has a fixed width */
+  width: 100%; /* Set the table width */
+  background-color: #fff;
+}
+
+#cloud_table caption {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #007BFF; /* Professional blue */
+  background-color: #f4f4f9; /* Light gray background */
+  padding: 15px;
+  text-align: left;
+  border-bottom: 2px solid #007BFF; /* Match the header color */
+}
+
+#cloud_table thead {
+  background-color: #007BFF; /* Professional blue */
+  color: #ffffff;
+  text-align: left;
+  font-weight: bold;
+}
+
+#cloud_table th, #cloud_table td {
+  padding: 12px 15px;
+  vertical-align: top; /* Align text to the top */
+}
+
+#cloud_table th:not(:last-child), #cloud_table td:not(:last-child) {
+  border-right: 1px solid #dddddd; /* Increased border width for better visibility */
+}
+
+#cloud_table tbody tr {
+  border-bottom: 1px solid #dddddd;
+  color: #333;
+}
+
+#cloud_table tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+
+#cloud_table tbody tr:last-of-type {
+  border-bottom: 2px solid #007BFF; /* Match the header color */
+}
+
+#cloud_table tbody td {
+  text-align: left;
+}
+
+#cloud_table td {
+  font-size: 0.9em;
+}
+
+#cloud_table tbody tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+/* Styling the first column */
+#cloud_table tbody td:first-child {
+  background-color: #007BFF; /* Professional blue */
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  width: 250px; /* Set a fixed width for the first column */
+  white-space: nowrap; /* Prevent text wrapping in the first column */
+  border-right: 1px solid #dddddd; /* Add border to the right */
+}
+
+/* Add subtle hover effect for table rows */
+#cloud_table tbody tr:hover {
+  background-color: #e0f7fa; /* Light cyan background on hover */
+}
