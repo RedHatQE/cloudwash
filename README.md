@@ -1,4 +1,5 @@
-# Cloudwash
+# ![Cloudwash_plain](https://github.com/user-attachments/assets/0d901947-465d-4aed-9d12-4e2c0b7187d2) Cloudwash
+
 
 [![PyPi & Quay Releases](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/new_release.yml)
 [![CodeQL](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/RedHatQE/cloudwash/actions/workflows/codeql-analysis.yml)
