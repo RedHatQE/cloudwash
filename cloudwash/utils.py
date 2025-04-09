@@ -6,7 +6,6 @@ from datetime import datetime
 import dateparser
 import dominate
 import pytz
-from dominate.tags import br
 from dominate.tags import caption
 from dominate.tags import div
 from dominate.tags import h1
@@ -165,13 +164,15 @@ def create_html(provider, all_data):
                                         elif isinstance(data[table_head], dict):
                                             component = []
                                             for rtype, resources in data[table_head].items():
-                                                rtype_line =  bullet + rtype + line_break
+                                                rtype_line = bullet + rtype + line_break
                                                 if len(resources):
                                                     component.append(rtype_line)
                                                     comp_line = tab * 2 + ' '
                                                     for resource_name in resources:
-                                                        comp_line += bullet + ' ' + resource_name + ' '
-                                                    comp_line+= line_break
+                                                        comp_line += (
+                                                            bullet + ' ' + resource_name + ' '
+                                                        )
+                                                    comp_line += line_break
                                                     component.append(comp_line)
                                             joined_component = ' '.join(component)
                                             if joined_component:
