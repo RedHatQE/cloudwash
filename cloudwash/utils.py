@@ -155,22 +155,30 @@ def create_html(provider, all_data):
                                         td(table_head.replace("_", " ").title())
                                         bullet = '&#8226;'
                                         tab = '&nbsp;'
+                                        line_break = '<br>'
                                         if isinstance(data[table_head], list):
                                             component = ''
                                             for resource_name in data[table_head]:
                                                 component += bullet + ' ' + resource_name + ' '
-                                            td(raw(component))
+                                            if component:
+                                                td(raw(component))
                                         elif isinstance(data[table_head], dict):
                                             component = []
                                             for rtype, resources in data[table_head].items():
-                                                comp_line = ' ' + tab * 2 + ' '
-                                                rtype_line = bullet + rtype + str(br())
-                                                for resource_name in resources:
-                                                    comp_line += bullet + ' ' + resource_name + ' '
-                                                component.append(rtype_line + comp_line)
-                                            td(raw(str(br()).join(component)))
+                                                rtype_line =  bullet + rtype + line_break
+                                                if len(resources):
+                                                    component.append(rtype_line)
+                                                    comp_line = tab * 2 + ' '
+                                                    for resource_name in resources:
+                                                        comp_line += bullet + ' ' + resource_name + ' '
+                                                    comp_line+= line_break
+                                                    component.append(comp_line)
+                                            joined_component = ' '.join(component)
+                                            if joined_component:
+                                                td(raw(joined_component))
                                         else:
-                                            td(raw(bullet + ' ' + data[table_head]))
+                                            header = bullet + ' ' + data[table_head]
+                                            td(raw(header))
     with open(f'cleanup_resource_{provider}.html', 'w') as file:
         file.write(doc.render())
 
