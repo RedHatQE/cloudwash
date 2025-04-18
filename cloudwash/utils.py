@@ -1,5 +1,7 @@
 """Common utils for cleanup activities of all CRs"""
 import importlib.resources
+import os
+import subprocess
 from collections import namedtuple
 from datetime import datetime
 
@@ -18,9 +20,8 @@ from dominate.util import raw
 from wrapanapi.systems.ec2 import ResourceExplorerResource
 
 from cloudwash.assets import css
+from cloudwash.constants import OCP_TAG_SUBSTR
 from cloudwash.logger import logger
-
-OCP_TAG_SUBSTR = "kubernetes.io/cluster/"
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 _containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
@@ -29,7 +30,7 @@ dry_data = {
     "NICS": {"delete": []},
     "DISCS": {"delete": []},
     "PIPS": {"delete": []},
-    "OCPS": {"delete": []},
+    "OCPS": {"delete": [], "clusters": []},
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
@@ -62,12 +63,8 @@ def resourcewise_data(dry_data=None) -> dict:
         "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
         "deletable_resources": dry_data["RESOURCES"]["delete"],
         "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
-        "deletable_ocps": {
-            ocp.resource_type: [
-                r.name for r in dry_data["OCPS"]["delete"] if r.resource_type == ocp.resource_type
-            ]
-            for ocp in dry_data["OCPS"]["delete"]
-        },
+        "clusters_ocps": dry_data["OCPS"]["clusters"],
+        "deletable_ocps": dry_data["OCPS"]["delete"],
     }
     return resource_data
 
@@ -280,7 +277,7 @@ def calculate_time_threshold(time_ref=""):
     return time_threshold
 
 
-def filter_resources_by_time_modified(
+def filtered_resources_by_time_modified(
     time_threshold,
     resources: list[ResourceExplorerResource] = None,
 ) -> list:
@@ -303,6 +300,51 @@ def filter_resources_by_time_modified(
     return filtered_resources
 
 
-def delete_ocp(ocp):
-    # WIP: add support for deletion
-    pass
+def check_installer_exists():
+    try:
+        subprocess.run(
+            ['openshift-install', '--help'],
+            stdout=subprocess.DEVNULL,  # Suppress stdout
+            stderr=subprocess.DEVNULL,  # Suppress stderr
+            check=False,  # Ignore failure
+        )
+        logger.info("Openshift Installer exists")
+    except FileNotFoundError:
+        logger.exception(
+            "Openshift Installer CLI doesn't exists"
+            "\nUse a docker container env for cleanup or locally install using: "
+            "https://mirror.openshift.com/pub/openshift-v4/x86_64/"
+            "clients/ocp/stable/openshift-install-linux.tar."
+            "\nFor more information check out: https://github.com/openshift/installer."
+        )
+        exit(1)
+
+
+def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
+    if metadata_path == "" or not os.path.exists(metadata_path):
+        # Return without raising exception, will try to fetch next OCP cluster info
+        logger.error(f"Failed to load cluster info from metadata path: {metadata_path}.")
+    else:
+        cleanup_dir = metadata_path.split("metadata.json")[0]
+        env = os.environ.copy()
+        # if not env.get("AWS_ACCESS_KEY_ID"):
+        # my_env["AWS_ACCESS_KEY_ID"] = settings.providers.ec2.username
+        # my_env["AWS_SECRET_ACCESS_KEY"] = settings.providers.ec2.password
+        try:
+            subprocess.run(
+                [
+                    'openshift-install',
+                    'destroy',
+                    'cluster',
+                    '--dir',
+                    cleanup_dir,
+                    '--log-level=debug',
+                ],
+                env=env,
+                stdout=subprocess.PIPE,
+                text=True,
+                check=False,
+            )  # Use check=True to raise an exception for non-zero return codes
+            logger.info(f"Successfully destroyed OCP cluster {cluster_name}")
+        except Exception as ex:
+            logger.error(f"Failed to cleanup OCP cluster {cluster_name}. Failure info:\n{ex}")

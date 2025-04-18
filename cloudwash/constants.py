@@ -3,3 +3,4 @@ azure_data = ['VMS', 'NICS', 'DISCS', 'IMAGES', 'PIPS', 'RESOURCES']
 gce_data = ['VMS', 'NICS', 'DISCS']
 vmware_data = ['VMS', 'NICS', 'DISCS']
 container_data = ['CONTAINERS']
+OCP_TAG_SUBSTR = "kubernetes.io/cluster/"
