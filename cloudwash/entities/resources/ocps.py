@@ -92,6 +92,8 @@ class CleanAWSOcps(CleanOCPs):
             instances = self._cluster_map[cluster_name].get("Instances")
 
             if instances:
+                import ipdb
+                ipdb.set_trace()
                 # For resources with associated EC2 Instances, filter by Instances SLA
                 if not filtered_resources_by_time_modified(
                     time_threshold,

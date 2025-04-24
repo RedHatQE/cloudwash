@@ -290,6 +290,21 @@ def filtered_resources_by_time_modified(
     :Example:
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
+    # def has_too_new_resources(resources):
+    #     return any(r.date_modified > time_threshold for r in resources)
+    #
+    # def filter(resources):
+    #     return [r for r in resources if r.date_modified <= time_threshold]
+    #
+    # # Usage
+    # if first_use_case:
+    #     if has_too_new_resources(resources):
+    #         return False
+    # elif second_use_case:
+    #     filtered = filter(resources)
+
+
+    
     filtered_resources = []
 
     for resource in resources:
