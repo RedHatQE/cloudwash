@@ -326,6 +326,7 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
         # my_env["AWS_ACCESS_KEY_ID"] = settings.providers.ec2.username
         # my_env["AWS_SECRET_ACCESS_KEY"] = settings.providers.ec2.password
         try:
+            logger.info(f"Starting the destroy of OCP cluster: {cluster_name}")
             result = subprocess.run(
                 [
                     'openshift-install',
@@ -345,7 +346,32 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
                 # Print logs from the openshift-installer cli
                 logger.error(f"{err_msg}\n{result.stdout}")
             else:
-                logger.info(f"Successfully destroyed OCP cluster {cluster_name}")
+                logger.info(f"Successfully completed.\n")
         except Exception as ex:
             # Catch output of the subprocess run error
             logger.error(f"{err_msg}\n{ex}")
+
+
+def validate_deletion_with_user_input(cluster_name) -> bool:
+    while True:
+        # confirm with the user
+        user_input = input(f'Confirm destroy of cluster {cluster_name} [Y/N]: ')
+
+        # input validation
+        if user_input.lower() in ('y', 'yes'):
+            return True
+        elif user_input.lower() in ('n', 'no'):  # using this elif for readability
+            return False
+        else:
+            # ... error handling ...
+            print(f'Error: Input {user_input} unrecognised. Please try again.')
+
+
+def destroy_ocp_cluster_wrapper(metadata_path: str, cluster_name: str, user_validation=False):
+    if user_validation:
+        destroy_ocp_cluster(metadata_path=metadata_path, cluster_name=cluster_name)
+    else:
+        if validate_deletion_with_user_input(cluster_name):
+            destroy_ocp_cluster(metadata_path=metadata_path, cluster_name=cluster_name)
+        else:
+            logger.info(f"Skipping the deletion of the cluster: {cluster_name}\n")
