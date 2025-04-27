@@ -342,10 +342,8 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
                 check=False,
             )  # Use check=True to raise an exception for non-zero return codes
             if result.returncode != 0:
-                # Errors (stderr) will be logged into the screen normally
-                # In addition, catch info, debug and other stdout logs from the openshift-installer cli
+                # Print logs from the openshift-installer cli
                 logger.error(f"{err_msg}\n{result.stdout}")
-                exit()
             else:
                 logger.info(f"Successfully destroyed OCP cluster {cluster_name}")
         except Exception as ex:
