@@ -319,13 +319,14 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
         # Return without raising exception, will try to fetch next OCP cluster info
         logger.error(f"Failed to load cluster info from metadata path: {metadata_path}.")
     else:
+        err_msg = f"Failed to cleanup OCP cluster {cluster_name}. Failure info:"
         cleanup_dir = metadata_path.split("metadata.json")[0]
         env = os.environ.copy()
         # if not env.get("AWS_ACCESS_KEY_ID"):
         # my_env["AWS_ACCESS_KEY_ID"] = settings.providers.ec2.username
         # my_env["AWS_SECRET_ACCESS_KEY"] = settings.providers.ec2.password
         try:
-            subprocess.run(
+            result = subprocess.run(
                 [
                     'openshift-install',
                     'destroy',
@@ -336,9 +337,17 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
                 ],
                 env=env,
                 stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout
                 text=True,
                 check=False,
             )  # Use check=True to raise an exception for non-zero return codes
-            logger.info(f"Successfully destroyed OCP cluster {cluster_name}")
+            if result.returncode != 0:
+                # Errors (stderr) will be logged into the screen normally
+                # In addition, catch info, debug and other stdout logs from the openshift-installer cli
+                logger.error(f"{err_msg}\n{result.stdout}")
+                exit()
+            else:
+                logger.info(f"Successfully destroyed OCP cluster {cluster_name}")
         except Exception as ex:
-            logger.error(f"Failed to cleanup OCP cluster {cluster_name}. Failure info:\n{ex}")
+            # Catch output of the subprocess run error
+            logger.error(f"{err_msg}\n{ex}")
