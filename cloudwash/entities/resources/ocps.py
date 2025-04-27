@@ -10,7 +10,7 @@ from cloudwash.utils import calculate_time_threshold
 from cloudwash.utils import check_installer_exists
 from cloudwash.utils import destroy_ocp_cluster
 from cloudwash.utils import dry_data
-from cloudwash.utils import filtered_resources_by_time_modified
+from cloudwash.utils import filter_resources_by_time_modified
 from cloudwash.utils import group_ocps_by_cluster
 
 
@@ -76,7 +76,7 @@ class CleanOCPs(OCPsCleanup):
 class CleanAWSOcps(CleanOCPs):
     def list(self):
         resources = []
-        time_threshold = calculate_time_threshold(time_ref=settings.aws.criteria.ocps.get("SLA"))
+        time_threshold = settings.aws.criteria.ocps.get("SLA")
 
         ocp_prefixes = list(settings.aws.criteria.ocps.get("OCP_PREFIXES") or [""])
         for prefix in ocp_prefixes:
@@ -90,22 +90,23 @@ class CleanAWSOcps(CleanOCPs):
         for cluster_name in self._cluster_map.keys():
             cluster_resources = self._cluster_map[cluster_name].get("Resources")
             instances = self._cluster_map[cluster_name].get("Instances")
+            leftover_ocp = False
 
             if instances:
-                import ipdb
-                ipdb.set_trace()
                 # For resources with associated EC2 Instances, filter by Instances SLA
-                if not filtered_resources_by_time_modified(
+                if filter_resources_by_time_modified(
                     time_threshold,
                     resources=instances,
                 ):
-                    self._deletable["filtered_leftovers"].extend(cluster_resources)
-                    self._deletable["ocp_clusters"].append(cluster_name)
+                    leftover_ocp = True
+                    self._deletable["filtered_leftovers"].extend(instances)
             else:
                 # For resources with no associated EC2 Instances, identify as leftovers
-                self._deletable["filtered_leftovers"].extend(
-                    filtered_resources_by_time_modified(time_threshold, resources=cluster_resources)
-                )
+                leftover_ocp = True
+
+            if leftover_ocp:
+                # Will not collect resources recorded during the SLA time
+                self._deletable["filtered_leftovers"].extend(cluster_resources)
                 self._deletable["ocp_clusters"].append(cluster_name)
 
         # Sort resources by type and cluster by name

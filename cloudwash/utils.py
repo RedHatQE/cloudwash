@@ -277,42 +277,21 @@ def calculate_time_threshold(time_ref=""):
     return time_threshold
 
 
-def filtered_resources_by_time_modified(
+def filter_resources_by_time_modified(
     time_threshold,
     resources: list[ResourceExplorerResource] = None,
-) -> list:
+) -> bool:
     """
     Filter list of AWS resources by checking modification date ("LastReportedAt")
-    :param datetime time_threshold: Time filtering criteria
+    :param str time_threshold: Time filtering criteria
     :param list resources: List of resources to be filtered out
-    :return: list of resources that last modified before time threshold
+    :return: True if all resources in the list last modified before time threshold
 
     :Example:
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
-    # def has_too_new_resources(resources):
-    #     return any(r.date_modified > time_threshold for r in resources)
-    #
-    # def filter(resources):
-    #     return [r for r in resources if r.date_modified <= time_threshold]
-    #
-    # # Usage
-    # if first_use_case:
-    #     if has_too_new_resources(resources):
-    #         return False
-    # elif second_use_case:
-    #     filtered = filter(resources)
-
-
-    
-    filtered_resources = []
-
-    for resource in resources:
-        # Will not collect resources recorded during the SLA time
-        if resource.date_modified > time_threshold:
-            continue
-        filtered_resources.append(resource)
-    return filtered_resources
+    time_threshold = calculate_time_threshold(time_ref=time_threshold)
+    return all(r.date_modified <= time_threshold for r in resources)
 
 
 def check_installer_exists():
@@ -323,7 +302,7 @@ def check_installer_exists():
             stderr=subprocess.DEVNULL,  # Suppress stderr
             check=False,  # Ignore failure
         )
-        logger.info("Openshift Installer exists")
+        logger.info("Found Openshift Installer")
     except FileNotFoundError:
         logger.exception(
             "Openshift Installer CLI doesn't exists"
