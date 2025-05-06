@@ -6,8 +6,8 @@ from cloudwash.config import settings
 from cloudwash.constants import OCP_TAG_SUBSTR
 from cloudwash.entities.resources.base import OCPsCleanup
 from cloudwash.logger import logger
-from cloudwash.utils import destroy_ocp_cluster_wrapper
 from cloudwash.utils import check_installer_exists
+from cloudwash.utils import destroy_ocp_cluster_wrapper
 from cloudwash.utils import dry_data
 from cloudwash.utils import filter_resources_by_time_modified
 from cloudwash.utils import group_ocps_by_cluster
@@ -42,13 +42,17 @@ class CleanOCPs(OCPsCleanup):
         """
         TODO Complete
         """
+        cluster_id = ""
         # Prepare the data
         logger.info(f"\nPreparing metadata for cluster: {cluster_name}")
         cluster_metadata = {
+            "clusterName": f"{cluster_name}",
+            "clusterID": f"{cluster_id}",
+            "infraID": f"{cluster_name}",
             "aws": {
                 "region": region,
                 "identifier": [{f"{OCP_TAG_SUBSTR}{cluster_name}": "owned"}],
-            }
+            },
         }
         metadata_file = os.path.join(cleanup_dir, "metadata.json")
 
@@ -69,8 +73,11 @@ class CleanOCPs(OCPsCleanup):
                         region=self.client.cleaning_region,
                         cleanup_dir=tmpdir,
                     )
-                    destroy_ocp_cluster_wrapper(metadata_path=metadata_path, cluster_name=cluster_name, user_validation=user_validation)
-
+                    destroy_ocp_cluster_wrapper(
+                        metadata_path=metadata_path,
+                        cluster_name=cluster_name,
+                        user_validation=user_validation,
+                    )
 
 
 class CleanAWSOcps(CleanOCPs):
@@ -105,14 +112,16 @@ class CleanAWSOcps(CleanOCPs):
                 leftover_ocp = True
 
             if leftover_ocp:
-                if not filter_resources_by_time_modified(time_threshold, resources=cluster_resources):
-                    for r in cluster_resources:
-                        print(r.date_modified)
-                    import ipdb
-                    ipdb.set_trace()
-                # Will not collect resources recorded during the SLA time
-                self._deletable["filtered_leftovers"].extend(cluster_resources)
-                self._deletable["ocp_clusters"].append(cluster_name)
+                # Filter all cluster resources by SLA to avoid deletion of resources that are
+                # in use, for example: EBS volume is being reused by the newly provisioned cluster
+                if filter_resources_by_time_modified(time_threshold, resources=cluster_resources):
+                    # Will not collect resources recorded during the SLA time
+                    self._deletable["filtered_leftovers"].extend(cluster_resources)
+                    self._deletable["ocp_clusters"].append(cluster_name)
+                else:
+                    logger.info(
+                        f"Found resources in use, skipping the deletion of cluster {cluster_name}"
+                    )
 
         # Sort resources by type and cluster by name
         self._deletable["filtered_leftovers"] = sorted(

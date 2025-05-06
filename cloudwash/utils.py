@@ -291,7 +291,13 @@ def filter_resources_by_time_modified(
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
     time_threshold = calculate_time_threshold(time_ref=time_threshold)
-    return all(r.date_modified <= time_threshold for r in resources)
+    if all(r.date_modified <= time_threshold for r in resources):
+        return True
+    else:
+        for r in resources:
+            if r.date_modified > time_threshold:
+                logger.debug(f"Id: {r.id}, Modified: {r.date_modified}, Type: {r.resource_type}")
+        return False
 
 
 def check_installer_exists():
@@ -326,7 +332,7 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
         # my_env["AWS_ACCESS_KEY_ID"] = settings.providers.ec2.username
         # my_env["AWS_SECRET_ACCESS_KEY"] = settings.providers.ec2.password
         try:
-            logger.info(f"Starting the destroy of OCP cluster: {cluster_name}")
+            logger.info(f"Starting to destroy OCP cluster: {cluster_name}")
             result = subprocess.run(
                 [
                     'openshift-install',
@@ -346,7 +352,8 @@ def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
                 # Print logs from the openshift-installer cli
                 logger.error(f"{err_msg}\n{result.stdout}")
             else:
-                logger.info(f"Successfully completed.\n")
+                logger.debug(result.stdout)
+                logger.info("Successfully completed.")
         except Exception as ex:
             # Catch output of the subprocess run error
             logger.error(f"{err_msg}\n{ex}")
