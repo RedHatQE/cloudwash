@@ -1,5 +1,6 @@
 """Common utils for cleanup activities of all CRs"""
 import importlib.resources
+import json
 import os
 import subprocess
 from collections import namedtuple
@@ -240,18 +241,19 @@ def group_ocps_by_cluster(resources: list = None) -> dict:
 
     for resource in resources:
         for key in resource.get_tags(regex=OCP_TAG_SUBSTR):
-            cluster_name = key.get("Key")
-            if OCP_TAG_SUBSTR in cluster_name:
-                cluster_name = cluster_name.split(OCP_TAG_SUBSTR)[1]
-                if cluster_name not in clusters_map.keys():
-                    clusters_map[cluster_name] = {"Resources": [], "Instances": []}
+            cluster_infra_id = key.get("Key")
+            if OCP_TAG_SUBSTR in cluster_infra_id:
+                # Considering the following format: "kubernetes.io/cluster/<CLUSTER_INFRA_ID>"
+                cluster_infra_id = cluster_infra_id.split(OCP_TAG_SUBSTR)[1]
+                if cluster_infra_id not in clusters_map.keys():
+                    clusters_map[cluster_infra_id] = {"Resources": [], "Instances": []}
 
                 # Set cluster's EC2 instances
                 if hasattr(resource, 'ec2_instance'):
-                    clusters_map[cluster_name]["Instances"].append(resource)
+                    clusters_map[cluster_infra_id]["Instances"].append(resource)
                 # Set resource under cluster
                 else:
-                    clusters_map[cluster_name]["Resources"].append(resource)
+                    clusters_map[cluster_infra_id]["Resources"].append(resource)
     return clusters_map
 
 
@@ -291,13 +293,7 @@ def filter_resources_by_time_modified(
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
     time_threshold = calculate_time_threshold(time_ref=time_threshold)
-    if all(r.date_modified <= time_threshold for r in resources):
-        return True
-    else:
-        for r in resources:
-            if r.date_modified > time_threshold:
-                logger.debug(f"Id: {r.id}, Modified: {r.date_modified}, Type: {r.resource_type}")
-        return False
+    return all(r.date_modified <= time_threshold for r in resources)
 
 
 def check_installer_exists():
@@ -382,3 +378,14 @@ def destroy_ocp_cluster_wrapper(metadata_path: str, cluster_name: str, user_vali
             destroy_ocp_cluster(metadata_path=metadata_path, cluster_name=cluster_name)
         else:
             logger.info(f"Skipping the deletion of the cluster: {cluster_name}\n")
+
+
+def write_metadata_file(cluster_metadata: dict, cleanup_dir: str):
+    metadata_file = os.path.join(cleanup_dir, "metadata.json")
+
+    # Write the JSON to the file
+    with open(metadata_file, "w") as f:
+        json.dump(cluster_metadata, f)
+
+    logger.debug(f"Metadata written to {metadata_file}")
+    return metadata_file
