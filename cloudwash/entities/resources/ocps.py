@@ -57,6 +57,7 @@ class LeftoverAWSOcp:
     ):
         """
         TODO Complete
+        TODO Check if we can extract HostedZoneRole, clusterDomain
         """
         # Prepare the data
         infraID = self.infra_id
@@ -78,9 +79,7 @@ class LeftoverAWSOcp:
 
 
 class CleanOCPs(OCPsCleanup):
-    def __init__(self, client):
-        self.client = client
-        self.cleaning_region = self.client.cleaning_region
+    def __init__(self):
         self._deletable = {"ocp_clusters": [], "filtered_leftovers": []}
         self._cluster_map = {}
         self.list()
@@ -122,6 +121,12 @@ class CleanOCPs(OCPsCleanup):
 
 
 class CleanAWSOcps(CleanOCPs):
+    def __init__(self, client):
+        self.client = client
+        self.cleaning_region = self.client.cleaning_region
+        super().__init__()
+
+
     def group_ocps_by_cluster(self, resources: list = None) -> dict:
         """Group different types of AWS resources under their original OCP clusters
 
