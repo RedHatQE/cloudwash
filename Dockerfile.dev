@@ -39,5 +39,5 @@ RUN touch /usr/local/bin/ && cp openshift-install /usr/local/bin/
 USER 1001
 WORKDIR "${CLOUDWASH_DIR}"
 
-CMD ["swach"]
-# CMD ["--help"]
+ENTRYPOINT ["swach"]
+CMD ["--help"]
