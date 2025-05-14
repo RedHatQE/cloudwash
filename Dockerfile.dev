@@ -21,6 +21,12 @@ RUN git clone --depth=1 https://github.com/RedHatQE/cloudwash.git && \
 
 RUN /bin/bash -c 'cd ${CLOUDWASH_DIR}; for conffile in conf/*.yaml.template; do cp -- "$conffile" "${conffile%.yaml.template}.yaml"; done'
 
+# Install openshift-installer cli
+RUN curl -kf  https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-install-linux.tar.gz \
+    -o openshift-install-linux.tar.gz && \
+    tar zxf openshift-install-linux.tar.gz  && \
+    chmod +x openshift-install
+
 # adding .profile to environment variables, so it will be kept between shell sessions
 RUN echo "source ${APP_ROOT}/.profile" >> ${APP_ROOT}/bin/activate && touch ${APP_ROOT}/.profile
 
@@ -28,6 +34,8 @@ RUN echo "source ${APP_ROOT}/.profile" >> ${APP_ROOT}/bin/activate && touch ${AP
 USER 0
 RUN fix-permissions ${APP_ROOT} -P && \
     git config --global --add safe.directory ${CLOUDWASH_DIR}
+RUN touch /usr/local/bin/ && cp openshift-install /usr/local/bin/
+
 USER 1001
 WORKDIR "${CLOUDWASH_DIR}"
 

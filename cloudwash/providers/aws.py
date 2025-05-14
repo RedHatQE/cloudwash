@@ -13,6 +13,7 @@ from cloudwash.utils import echo_dry
 
 def cleanup(**kwargs):
     is_dry_run = kwargs.get("dry_run", False)
+    user_validate = kwargs.get("yes", False)
     dry_data['PROVIDER'] = "AWS"
     regions = settings.aws.auth.regions
     all_data = []
@@ -30,7 +31,7 @@ def cleanup(**kwargs):
                 for items in data:
                     dry_data[items]['delete'] = []
                 logger.info(f"\nResources from the region: {region}")
-                awscleanup.ocps.cleanup()
+                awscleanup.ocps.cleanup(user_validation=user_validate)
                 if is_dry_run:
                     echo_dry(dry_data)
                     all_data.append(deepcopy(dry_data))
