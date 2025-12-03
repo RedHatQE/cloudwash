@@ -1,5 +1,8 @@
 """Common utils for cleanup activities of all CRs"""
 import importlib.resources
+import json
+import os
+import subprocess
 from collections import namedtuple
 from datetime import datetime
 
@@ -18,9 +21,8 @@ from dominate.util import raw
 from wrapanapi.systems.ec2 import ResourceExplorerResource
 
 from cloudwash.assets import css
+from cloudwash.constants import OCP_TAG_SUBSTR
 from cloudwash.logger import logger
-
-OCP_TAG_SUBSTR = "kubernetes.io/cluster/"
 
 _vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
 _containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
@@ -29,7 +31,7 @@ dry_data = {
     "NICS": {"delete": []},
     "DISCS": {"delete": []},
     "PIPS": {"delete": []},
-    "OCPS": {"delete": []},
+    "OCPS": {"delete": [], "clusters": []},
     "RESOURCES": {"delete": []},
     "STACKS": {"delete": []},
     "IMAGES": {"delete": []},
@@ -62,12 +64,8 @@ def resourcewise_data(dry_data=None) -> dict:
         "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
         "deletable_resources": dry_data["RESOURCES"]["delete"],
         "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
-        "deletable_ocps": {
-            ocp.resource_type: [
-                r.name for r in dry_data["OCPS"]["delete"] if r.resource_type == ocp.resource_type
-            ]
-            for ocp in dry_data["OCPS"]["delete"]
-        },
+        "clusters_ocps": dry_data["OCPS"]["clusters"],
+        "deletable_ocps": dry_data["OCPS"]["delete"],
     }
     return resource_data
 
@@ -243,18 +241,19 @@ def group_ocps_by_cluster(resources: list = None) -> dict:
 
     for resource in resources:
         for key in resource.get_tags(regex=OCP_TAG_SUBSTR):
-            cluster_name = key.get("Key")
-            if OCP_TAG_SUBSTR in cluster_name:
-                cluster_name = cluster_name.split(OCP_TAG_SUBSTR)[1]
-                if cluster_name not in clusters_map.keys():
-                    clusters_map[cluster_name] = {"Resources": [], "Instances": []}
+            cluster_infra_id = key.get("Key")
+            if OCP_TAG_SUBSTR in cluster_infra_id:
+                # Considering the following format: "kubernetes.io/cluster/<CLUSTER_INFRA_ID>"
+                cluster_infra_id = cluster_infra_id.split(OCP_TAG_SUBSTR)[1]
+                if cluster_infra_id not in clusters_map.keys():
+                    clusters_map[cluster_infra_id] = {"Resources": [], "Instances": []}
 
                 # Set cluster's EC2 instances
                 if hasattr(resource, 'ec2_instance'):
-                    clusters_map[cluster_name]["Instances"].append(resource)
+                    clusters_map[cluster_infra_id]["Instances"].append(resource)
                 # Set resource under cluster
                 else:
-                    clusters_map[cluster_name]["Resources"].append(resource)
+                    clusters_map[cluster_infra_id]["Resources"].append(resource)
     return clusters_map
 
 
@@ -283,26 +282,110 @@ def calculate_time_threshold(time_ref=""):
 def filter_resources_by_time_modified(
     time_threshold,
     resources: list[ResourceExplorerResource] = None,
-) -> list:
+) -> bool:
     """
     Filter list of AWS resources by checking modification date ("LastReportedAt")
-    :param datetime time_threshold: Time filtering criteria
+    :param str time_threshold: Time filtering criteria
     :param list resources: List of resources to be filtered out
-    :return: list of resources that last modified before time threshold
+    :return: True if all resources in the list last modified before time threshold
 
     :Example:
         Use the time_ref "1h" to collect resources that exist for more than an hour
     """
-    filtered_resources = []
-
-    for resource in resources:
-        # Will not collect resources recorded during the SLA time
-        if resource.date_modified > time_threshold:
-            continue
-        filtered_resources.append(resource)
-    return filtered_resources
+    time_threshold = calculate_time_threshold(time_ref=time_threshold)
+    return all(r.date_modified <= time_threshold for r in resources)
 
 
-def delete_ocp(ocp):
-    # WIP: add support for deletion
-    pass
+def check_installer_exists():
+    try:
+        subprocess.run(
+            ['openshift-install', '--help'],
+            stdout=subprocess.DEVNULL,  # Suppress stdout
+            stderr=subprocess.DEVNULL,  # Suppress stderr
+            check=False,  # Ignore failure
+        )
+        logger.info("Found Openshift Installer")
+    except FileNotFoundError:
+        logger.exception(
+            "Openshift Installer CLI doesn't exists"
+            "\nUse a docker container env for cleanup or locally install using: "
+            "https://mirror.openshift.com/pub/openshift-v4/x86_64/"
+            "clients/ocp/stable/openshift-install-linux.tar."
+            "\nFor more information check out: https://github.com/openshift/installer."
+        )
+        exit(1)
+
+
+def destroy_ocp_cluster(metadata_path: str, cluster_name: str):
+    if metadata_path == "" or not os.path.exists(metadata_path):
+        # Return without raising exception, will try to fetch next OCP cluster info
+        logger.error(f"Failed to load cluster info from metadata path: {metadata_path}.")
+    else:
+        err_msg = f"Failed to cleanup OCP cluster {cluster_name}. Failure info:"
+        cleanup_dir = metadata_path.split("metadata.json")[0]
+        env = os.environ.copy()
+        # if not env.get("AWS_ACCESS_KEY_ID"):
+        # my_env["AWS_ACCESS_KEY_ID"] = settings.providers.ec2.username
+        # my_env["AWS_SECRET_ACCESS_KEY"] = settings.providers.ec2.password
+        try:
+            logger.info(f"Starting to destroy OCP cluster: {cluster_name}")
+            result = subprocess.run(
+                [
+                    'openshift-install',
+                    'destroy',
+                    'cluster',
+                    '--dir',
+                    cleanup_dir,
+                    '--log-level=debug',
+                ],
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout
+                text=True,
+                check=False,
+            )  # Use check=True to raise an exception for non-zero return codes
+            if result.returncode != 0:
+                # Print logs from the openshift-installer cli
+                logger.error(f"{err_msg}\n{result.stdout}")
+            else:
+                logger.debug(result.stdout)
+                logger.info("Successfully completed.")
+        except Exception as ex:
+            # Catch output of the subprocess run error
+            logger.error(f"{err_msg}\n{ex}")
+
+
+def validate_deletion_with_user_input(cluster_name) -> bool:
+    while True:
+        # confirm with the user
+        user_input = input(f'Confirm destroy of cluster {cluster_name} [Y/N]: ')
+
+        # input validation
+        if user_input.lower() in ('y', 'yes'):
+            return True
+        elif user_input.lower() in ('n', 'no'):  # using this elif for readability
+            return False
+        else:
+            # ... error handling ...
+            print(f'Error: Input {user_input} unrecognised. Please try again.')
+
+
+def destroy_ocp_cluster_wrapper(metadata_path: str, cluster_name: str, user_validation=False):
+    if user_validation:
+        destroy_ocp_cluster(metadata_path=metadata_path, cluster_name=cluster_name)
+    else:
+        if validate_deletion_with_user_input(cluster_name):
+            destroy_ocp_cluster(metadata_path=metadata_path, cluster_name=cluster_name)
+        else:
+            logger.info(f"Skipping the deletion of the cluster: {cluster_name}\n")
+
+
+def write_metadata_file(cluster_metadata: dict, cleanup_dir: str):
+    metadata_file = os.path.join(cleanup_dir, "metadata.json")
+
+    # Write the JSON to the file
+    with open(metadata_file, "w") as f:
+        json.dump(cluster_metadata, f)
+
+    logger.debug(f"Metadata written to {metadata_file}")
+    return metadata_file

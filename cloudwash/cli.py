@@ -105,8 +105,9 @@ def azure(ctx, vms, discs, nics, images, pips, _all, _all_rg):
     is_flag=True,
     help="Remove only unused OCP Cluster occupied resources from the provider",
 )
+@click.option("-y", "--yes", is_flag=True, help="Answer yes to all prompts")
 @click.pass_context
-def aws(ctx, vms, discs, nics, images, pips, stacks, ocps, _all):
+def aws(ctx, vms, discs, nics, images, pips, stacks, ocps, yes, _all):
     # Validate Amazon Settings
     validate_provider(ctx.command.name)
     is_dry_run = ctx.parent.params["dry"]
@@ -118,6 +119,7 @@ def aws(ctx, vms, discs, nics, images, pips, stacks, ocps, _all):
         pips=pips,
         stacks=stacks,
         ocps=ocps,
+        yes=yes,
         _all=_all,
         dry_run=is_dry_run,
     )
