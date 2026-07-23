@@ -1,19 +1,20 @@
 from cloudwash.config import settings
 from cloudwash.entities.resources.base import DiscsCleanup
 from cloudwash.logger import logger
-from cloudwash.utils import dry_data
+from cloudwash.utils import DryData
 
 
 class CleanDiscs(DiscsCleanup):
-    def __init__(self, client):
+    def __init__(self, client, dry_data=None):
         self.client = client
+        self.dry_data = dry_data or DryData()
         self._delete = []
         self.list()
 
     def _set_dry(self):
         # VMsContainer = namedtuple('VMsCotainer', ['delete', 'stop', 'skip'])
         # return VMsContainer(self._delete, self._stop, self._skip)
-        dry_data['DISCS']['delete'] = self._delete
+        self.dry_data['DISCS']['delete'] = self._delete
 
     def list(self):
         pass

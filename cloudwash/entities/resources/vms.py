@@ -1,13 +1,14 @@
 from cloudwash.config import settings
 from cloudwash.entities.resources.base import VMsCleanup
 from cloudwash.logger import logger
-from cloudwash.utils import dry_data
+from cloudwash.utils import DryData
 from cloudwash.utils import total_running_time
 
 
 class CleanVMs(VMsCleanup):
-    def __init__(self, client):
+    def __init__(self, client, dry_data=None):
         self.client = client
+        self.dry_data = dry_data or DryData()
         self._delete = []
         self._stop = []
         self._skip = []
@@ -16,9 +17,9 @@ class CleanVMs(VMsCleanup):
     def _set_dry(self):
         # VMsContainer = namedtuple('VMsCotainer', ['delete', 'stop', 'skip'])
         # return VMsContainer(self._delete, self._stop, self._skip)
-        dry_data['VMS']['delete'] = self._delete
-        dry_data['VMS']['stop'] = self._stop
-        dry_data['VMS']['skip'] = self._skip
+        self.dry_data['VMS']['delete'] = self._delete
+        self.dry_data['VMS']['stop'] = self._stop
+        self.dry_data['VMS']['skip'] = self._skip
 
     def list(self):
         pass

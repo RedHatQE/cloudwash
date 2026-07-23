@@ -1,18 +1,17 @@
 """Azure CR Cleanup Utilities"""
-from copy import deepcopy
-
 from cloudwash.client import compute_client
 from cloudwash.config import settings
 from cloudwash.constants import azure_data as data
 from cloudwash.entities.providers import AzureCleanup
 from cloudwash.logger import logger
 from cloudwash.utils import create_html
-from cloudwash.utils import dry_data
-from cloudwash.utils import echo_dry
+from cloudwash.utils import DryData
+from cloudwash.utils import print_dry_data
 
 
 def cleanup(**kwargs):
     is_dry_run = kwargs["dry_run"]
+    dry_data = DryData()
     dry_data['PROVIDER'] = "AZURE"
     regions = settings.azure.auth.regions
     groups = settings.azure.auth.resource_groups
@@ -34,10 +33,10 @@ def cleanup(**kwargs):
         for group in groups:
             dry_data['GROUP'] = group
             for items in data:
-                dry_data[items]['delete'] = []
+                dry_data.reset_resource(items)
 
             with compute_client("azure", azure_region=region, resource_group=group) as azure_client:
-                azurecleanup = AzureCleanup(client=azure_client)
+                azurecleanup = AzureCleanup(client=azure_client, dry_data=dry_data)
 
                 def dry_resources(hours_old=None):
                     dry_data["RESOURCES"]["delete"] = azure_client.list_resources_from_hours_old(
@@ -83,8 +82,6 @@ def cleanup(**kwargs):
                             hours_old=(sla_time / 60)
                         )
                         logger.info(f"Removed Resources: \n{rres}")
-                if is_dry_run:
-                    echo_dry(dry_data)
-                    all_data.append(deepcopy(dry_data))
+                print_dry_data(dry_data, is_dry_run, all_data)
     if is_dry_run:
         create_html(dry_data['PROVIDER'], all_data)

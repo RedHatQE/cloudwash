@@ -1,18 +1,19 @@
 from cloudwash.config import settings
 from cloudwash.entities.resources.base import StacksCleanup
 from cloudwash.logger import logger
-from cloudwash.utils import dry_data
+from cloudwash.utils import DryData
 from cloudwash.utils import total_running_time
 
 
 class CleanStacks(StacksCleanup):
-    def __init__(self, client):
+    def __init__(self, client, dry_data=None):
         self.client = client
+        self.dry_data = dry_data or DryData()
         self._delete = []
         self.list()
 
     def _set_dry(self):
-        dry_data['STACKS']['delete'] = self._delete
+        self.dry_data['STACKS']['delete'] = self._delete
 
     def list(self):
         pass

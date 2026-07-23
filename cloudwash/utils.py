@@ -2,6 +2,7 @@
 import importlib.resources
 from collections import namedtuple
 from datetime import datetime
+from copy import deepcopy
 
 import dateparser
 import dominate
@@ -22,51 +23,89 @@ from cloudwash.logger import logger
 
 OCP_TAG_SUBSTR = "kubernetes.io/cluster/"
 
-_vms_dict = {"VMS": {"delete": [], "stop": [], "skip": []}}
-_containers_dict = {"CONTAINERS": {"delete": [], "stop": [], "skip": []}}
 
-dry_data = {
-    "NICS": {"delete": []},
-    "DISCS": {"delete": []},
-    "PIPS": {"delete": []},
-    "OCPS": {"delete": []},
-    "RESOURCES": {"delete": []},
-    "STACKS": {"delete": []},
-    "IMAGES": {"delete": []},
-    "PROVIDER": "",
-    "REGION": "",
-    "GROUP": "",
-    "ZONE": "",
-}
+class DryData:
+    """Holds the per-run dry data for a single cleanup invocation.
+
+    Each provider `cleanup()` call creates its own instance and passes it down to
+    the provider/resource entities, so concurrent or sequential regions/zones never
+    share (and therefore never leak into) each other's dry data.
+    """
+
+    def __init__(self):
+        self._data = {
+            "VMS": {"delete": [], "stop": [], "skip": []},
+            "CONTAINERS": {"delete": [], "stop": [], "skip": []},
+            "NICS": {"delete": []},
+            "DISCS": {"delete": []},
+            "PIPS": {"delete": []},
+            "OCPS": {"delete": []},
+            "RESOURCES": {"delete": []},
+            "STACKS": {"delete": []},
+            "IMAGES": {"delete": []},
+            "PROVIDER": "",
+            "REGION": "",
+            "GROUP": "",
+            "ZONE": "",
+        }
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def update(self, other_dict):
+        self._data.update(other_dict)
+
+    def reset_resource(self, resource_key):
+        """Clears every list held for a resource (e.g. delete/stop/skip) without
+        dropping its sub-keys, so stale entries never leak into the next region/zone.
+        """
+        if resource_key in self._data:
+            for sub_key in self._data[resource_key]:
+                self._data[resource_key][sub_key] = []
+
+    def to_dict(self):
+        return self._data
+
+
 non_rt_keys = ('provider', 'zone', 'region', 'group')
-
-dry_data.update(_vms_dict)
-dry_data.update(_containers_dict)
 
 
 def resourcewise_data(dry_data=None) -> dict:
+    """Builds the resourcewise dry data view used for logging and HTML reporting.
+
+    :param dict dry_data: A plain dict following the `DryData.to_dict()` layout,
+        e.g. as produced by `print_dry_data` or stored in the `all_data` list.
+        Defaults to an empty/fresh `DryData` layout when not provided.
+    """
+    data = dry_data if dry_data is not None else DryData().to_dict()
     resource_data = {
-        "provider": dry_data.get('PROVIDER'),
-        "region": dry_data.get('REGION'),
-        "group": dry_data.get('GROUP'),
-        "zone": dry_data.get('ZONE'),
-        "deletable_vms": dry_data["VMS"]["delete"],
-        "stopable_vms": dry_data["VMS"]["stop"],
-        "skipped_vms": dry_data["VMS"]["skip"],
-        "deletable_containers": dry_data["CONTAINERS"]["delete"],
-        "stopable_containers": dry_data["CONTAINERS"]["stop"],
-        "skipped_containers": dry_data["CONTAINERS"]["skip"],
-        "deletable_discs": dry_data["DISCS"]["delete"],
-        "deletable_nics": dry_data["NICS"]["delete"],
-        "deletable_images": dry_data["IMAGES"]["delete"],
-        "deletable_pips": dry_data["PIPS"]["delete"] if "PIPS" in dry_data else None,
-        "deletable_resources": dry_data["RESOURCES"]["delete"],
-        "deletable_stacks": dry_data["STACKS"]["delete"] if "STACKS" in dry_data else None,
+        "provider": data.get('PROVIDER'),
+        "region": data.get('REGION'),
+        "group": data.get('GROUP'),
+        "zone": data.get('ZONE'),
+        "deletable_vms": data["VMS"]["delete"],
+        "stopable_vms": data["VMS"]["stop"],
+        "skipped_vms": data["VMS"]["skip"],
+        "deletable_containers": data["CONTAINERS"]["delete"],
+        "stopable_containers": data["CONTAINERS"]["stop"],
+        "skipped_containers": data["CONTAINERS"]["skip"],
+        "deletable_discs": data["DISCS"]["delete"],
+        "deletable_nics": data["NICS"]["delete"],
+        "deletable_images": data["IMAGES"]["delete"],
+        "deletable_pips": data["PIPS"]["delete"] if "PIPS" in data else None,
+        "deletable_resources": data["RESOURCES"]["delete"],
+        "deletable_stacks": data["STACKS"]["delete"] if "STACKS" in data else None,
         "deletable_ocps": {
             ocp.resource_type: [
-                r.name for r in dry_data["OCPS"]["delete"] if r.resource_type == ocp.resource_type
+                r.name for r in data["OCPS"]["delete"] if r.resource_type == ocp.resource_type
             ]
-            for ocp in dry_data["OCPS"]["delete"]
+            for ocp in data["OCPS"]["delete"]
         },
     }
     return resource_data
@@ -76,7 +115,7 @@ def echo_dry(dry_data=None) -> None:
     """Prints and Logs the per resource cleanup data on STDOUT and logfile
 
     :param dict dry_data: The deletable resources dry data of a Compute Resource,
-        it follows the format of module scoped `dry_data` variable in this module
+        following the `DryData.to_dict()` layout
     """
     logger.info("\n=========== DRY SUMMARY ============\n")
 
@@ -306,3 +345,10 @@ def filter_resources_by_time_modified(
 def delete_ocp(ocp):
     # WIP: add support for deletion
     pass
+
+
+def print_dry_data(dry_data, is_dry_run, all_data):
+    """Centralized function to print dry data and append it to all_data if in dry run mode."""
+    if is_dry_run:
+        echo_dry(dry_data.to_dict())
+        all_data.append(deepcopy(dry_data.to_dict()))

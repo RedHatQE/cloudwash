@@ -1,20 +1,21 @@
 from cloudwash.config import settings
 from cloudwash.entities.resources.base import OCPsCleanup
 from cloudwash.utils import calculate_time_threshold
-from cloudwash.utils import dry_data
 from cloudwash.utils import filter_resources_by_time_modified
 from cloudwash.utils import group_ocps_by_cluster
 from cloudwash.utils import OCP_TAG_SUBSTR
+from cloudwash.utils import DryData
 
 
 class CleanOCPs(OCPsCleanup):
-    def __init__(self, client):
+    def __init__(self, client, dry_data=None):
         self.client = client
+        self.dry_data = dry_data or DryData()
         self._delete = []
         self.list()
 
     def _set_dry(self):
-        dry_data['OCPS']['delete'] = self._delete
+        self.dry_data['OCPS']['delete'] = self._delete
 
     def list(self):
         pass

@@ -1,12 +1,13 @@
 from cloudwash.config import settings
 from cloudwash.entities.resources.base import ImagesCleanup
 from cloudwash.logger import logger
-from cloudwash.utils import dry_data
+from cloudwash.utils import DryData
 
 
 class CleanImages(ImagesCleanup):
-    def __init__(self, client):
+    def __init__(self, client, dry_data=None):
         self.client = client
+        self.dry_data = dry_data or DryData()
         self._delete = []
         self._stop = []
         self._skip = []
@@ -15,7 +16,7 @@ class CleanImages(ImagesCleanup):
     def _set_dry(self):
         # ImagesContainer = namedtuple('ImagesCotainer', ['delete', 'stop', 'skip'])
         # return ImagesContainer(self._delete, self._stop, self._skip)
-        dry_data['IMAGES']['delete'] = self._delete
+        self.dry_data['IMAGES']['delete'] = self._delete
 
     def list(self):
         pass
